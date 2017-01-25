@@ -13,14 +13,14 @@ public class WorldGenerator : MonoBehaviour
     public int Length;
     public int Seed;
 
-    public AnimationCurve heightCurve;
+    public AnimationCurve HeightCurve;
 
     public bool useFalloffMap;
     public AnimationCurve falloffCurve;
-
-    public TerrainType[] Terrains;
-    public SeaStories.TerrainType[] TerrainTypes;
     
+    public SeaStories.TerrainType[] TerrainTypes;
+    public int CitiesNum;
+
     [Header("Perlin Noise")]
     public float Scale = 0.5f;
     public int Octaves = 1;
@@ -38,6 +38,10 @@ public class WorldGenerator : MonoBehaviour
     MeshRenderer meshRenderer;
     BoxCollider meshCollider;
 
+    List<SeaStories.TerrainTile> landTerrain = new List<SeaStories.TerrainTile>();
+    List<SeaStories.TerrainTile> shoreTiles = new List<SeaStories.TerrainTile>();
+    List<City> cities = new List<City>();
+
     void Start ()
     {
         Setup();
@@ -48,6 +52,22 @@ public class WorldGenerator : MonoBehaviour
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
         meshCollider = GetComponent<BoxCollider>();
+
+        landTerrain.Clear();
+        shoreTiles.Clear();
+
+        if (Application.isPlaying)
+        {
+            for(int i = 0; i < transform.childCount; i++)
+                Destroy(transform.GetChild(i).gameObject);
+        }
+        else
+        {
+            while (transform.childCount > 0)
+            { 
+                DestroyImmediate(transform.GetChild(0).gameObject);
+            }
+        }
 
         CreateWorld();
     }
@@ -92,7 +112,7 @@ public class WorldGenerator : MonoBehaviour
         {
             for (int x = 0; x < Width; x++)
             {
-                vertices[currentVertex] = new Vector3(x, heightCurve.Evaluate(heightMap[currentVertex]), z);
+                vertices[currentVertex] = new Vector3(x, HeightCurve.Evaluate(heightMap[currentVertex]), z);
                 uvs[currentVertex] = new Vector2(x / (float)(Width - 1), z / (float)(Length - 1));
 
                 if (x + 1 < Width && z + 1 < Length)
@@ -124,11 +144,26 @@ public class WorldGenerator : MonoBehaviour
     {
         Texture2D texture = new Texture2D(Width-1, Length-1);
 
-        texture.SetPixels(GenerateColorMap(heightMap));
+        var colorMap = GenerateColorMap(heightMap);
+        GenerateCitiesOnColorMap(CitiesNum, colorMap);
+
+        texture.SetPixels(colorMap);
         texture.Apply();
         texture.filterMode = FilterMode.Point;
 
         return texture;
+    }
+
+    void GenerateCitiesOnColorMap(int number, Color[] colorMap)
+    {
+        for(int i = 0; i < number; i++)
+        {
+            var shoreTile = shoreTiles[Random.Range(0, shoreTiles.Count - 1)];
+            colorMap[shoreTile.Index] = Color.red;
+
+            // create city object
+            cities.Add(City.Create("City " + (i + 1), gameObject.transform, shoreTile.Coord));
+        }
     }
 
     Color[] GenerateColorMap(float[] heightMap)
@@ -137,9 +172,32 @@ public class WorldGenerator : MonoBehaviour
         int currentPixel = 0;
         for (int i = 0; i < colorMap.Length; i++)
         {
-            if (i % Width != 0)
+            if (i % Width != 0 && i > Width)
             {
-                colorMap[currentPixel] = GetColorFromHeight(heightMap[i]);
+                float height = heightMap[i];
+                colorMap[currentPixel] = GetColorFromHeight(height);
+                int x = i % Width;
+                var terrainType = GetTerrainTypeFromHeight(height);
+                if (terrainType.IsLand())
+                {
+                    // check adjacent tiles for water
+                    // Width * y + x
+                    bool isShore = false;
+
+                    if(!GetTerrainTypeFromHeight(heightMap[i - 1]).IsLand() ||
+                        !GetTerrainTypeFromHeight(heightMap[i + 1]).IsLand() ||
+                        !GetTerrainTypeFromHeight(heightMap[i - Width]).IsLand() ||
+                        !GetTerrainTypeFromHeight(heightMap[i + Width]).IsLand())
+                    {
+                        isShore = true;
+                        shoreTiles.Add(new SeaStories.TerrainTile(terrainType,
+                            new Vector3(x, HeightCurve.Evaluate(height), (i - 1 - x) / Width), currentPixel, true));
+                        //colorMap[currentPixel] = Color.red;
+                    }
+
+                    landTerrain.Add(new SeaStories.TerrainTile(terrainType,
+                        new Vector3(x, height, (i - x) / Width), currentPixel, isShore));
+                }
                 currentPixel++;
             }
         }
@@ -232,13 +290,24 @@ public class WorldGenerator : MonoBehaviour
 
     Color GetColorFromHeight(float height)
     {
-        for(int i = 0; i < Terrains.Length; i++)
+        for(int i = 0; i < TerrainTypes.Length; i++)
         {
-            if (height <= Terrains[i].MaxHeight)
-                return Terrains[i].Color;
+            if (height <= TerrainTypes[i].MaxHeight)
+                return TerrainTypes[i].Color;
         }
 
         return Color.black;
+    }
+
+    SeaStories.TerrainType GetTerrainTypeFromHeight(float height)
+    {
+        for (int i = 0; i < TerrainTypes.Length; i++)
+        {
+            if (height <= TerrainTypes[i].MaxHeight)
+                return TerrainTypes[i];
+        }
+
+        return TerrainTypes[0];
     }
 
     [System.Serializable]

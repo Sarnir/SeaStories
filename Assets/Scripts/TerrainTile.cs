@@ -18,47 +18,40 @@ namespace SeaStories
     public class TerrainType
     {
         [SerializeField]
-        TerrainID ID;
+        TerrainID id;
         [SerializeField]
-        Color Color;
+        Color color;
+        [SerializeField]
+        float maxHeight;
 
-        public TerrainType(TerrainID id, Color color)
-        {
-            ID = id;
-            Color = color;
-        }
+        public TerrainID ID { get { return id; } }
+        public Color Color { get { return color; } }
+        public float MaxHeight { get { return maxHeight; } }
 
         public bool IsLand()
         {
             return ID >= TerrainID.Sand;
         }
-
-        public TerrainID GetID()
-        {
-            return ID;
-        }
-
-        public Color GetColor()
-        {
-            return Color;
-        }
     }
 
-    public class Terrain
+    public class TerrainTile
     {
         public bool IsLand { get { return _terrainType.IsLand(); } }
         public bool IsShore { get { return _isShore; } }
         public Vector3 Coord { get { return _coord; } }
+        public int Index { get { return _index; } }
 
         TerrainType _terrainType;
         Vector3 _coord;
         bool _isShore;
+        int _index;
 
-        public Terrain(TerrainType type, Vector3 coord, bool isShore)
+        public TerrainTile(TerrainType type, Vector3 coord, int index, bool isShore)
         {
             _terrainType = type;
             _coord = coord;
             _isShore = isShore;
+            _index = index;
         }
     }
 }
