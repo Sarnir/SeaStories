@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ShopScreen : MonoBehaviour
+public class ShopWindow : UIWindow
 {
     public ShopContent BuyContent;
     public ShopContent SellContent;
@@ -15,11 +15,10 @@ public class ShopScreen : MonoBehaviour
 
     ShopContent currentContent;
 
-    Canvas canvas;
     ScrollRect scrollView;
-	// Use this for initialization
-	void Start () {
-        canvas = GetComponent<Canvas>();
+
+	protected override void Setup ()
+    {
         scrollView = GetComponentInChildren<ScrollRect>();
 
         BuyContent.OnShopItemClick += BuyItemFromShop;
@@ -30,11 +29,6 @@ public class ShopScreen : MonoBehaviour
     {
         BuyContent.OnShopItemClick -= BuyItemFromShop;
         SellContent.OnShopItemClick -= SellItemToShop;
-    }
-
-    public void CloseShop()
-    {
-        canvas.enabled = false;
     }
 
     public void OpenShop(Inventory _playerInventory, City shop)
@@ -48,13 +42,8 @@ public class ShopScreen : MonoBehaviour
         SetPlayerGold();
         SetCityGold();
 
-        canvas.enabled = true;
+        Open();
         SwitchToBuyContent(true);
-    }
-
-    public bool IsOpened()
-    {
-        return canvas.enabled;
     }
 
     public void SwitchToSellContent(bool force = false)
@@ -64,6 +53,7 @@ public class ShopScreen : MonoBehaviour
             currentContent = SellContent;
             SellContent.SetActive(true);
             BuyContent.SetActive(false);
+            RefreshContent();
         }
     }
 
@@ -74,6 +64,7 @@ public class ShopScreen : MonoBehaviour
             currentContent = BuyContent;
             SellContent.SetActive(false);
             BuyContent.SetActive(true);
+            RefreshContent();
         }
     }
 
@@ -89,12 +80,12 @@ public class ShopScreen : MonoBehaviour
 
     public void SetItemsToBuy(ItemsCollection itemsToBuy)
     {
-        BuyContent.GenerateItemList(shopInventory, itemsToBuy);
+        BuyContent.GenerateItemList(shopInventory, playerInventory, itemsToBuy);
     }
 
     void SetItemsToSell(ItemsCollection sellableItemsWithPrices)
     {
-        SellContent.GenerateItemList(playerInventory, sellableItemsWithPrices);
+        SellContent.GenerateItemList(playerInventory, shopInventory, sellableItemsWithPrices);
     }
 
     void BuyItemFromShop(ShopItem item)

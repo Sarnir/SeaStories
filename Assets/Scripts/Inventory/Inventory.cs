@@ -5,22 +5,20 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    const string GOLD_NAME_STRING = "Gold";
-
     public uint Gold
     {
         get
         {
-            return inventory.GetItemQuantity(GOLD_NAME_STRING);
+            return _gold;
         }
 
         private set
         {
-            inventory.SetItemQuantity(GOLD_NAME_STRING, value);
+            _gold = value;
         }
     }
 
-    
+    private uint _gold;
 
     ItemsCollection inventory;
 	void Start ()
@@ -33,7 +31,6 @@ public class Inventory : MonoBehaviour
         if(inventory == null)
         {
             inventory = new ItemsCollection();
-            inventory.AddItem(GOLD_NAME_STRING);
         }
     }
 
@@ -107,22 +104,22 @@ public class Inventory : MonoBehaviour
 
     public int GetGold()
     {
-        return (int)inventory.GetItemQuantity(GOLD_NAME_STRING);
+        return (int)Gold;
     }
 
     public void SetGold(int quantity)
     {
-        inventory.SetItemQuantity(GOLD_NAME_STRING, quantity);
+        Gold = (uint)quantity;
     }
 
     public void AddGold(int quantity)
     {
-        inventory.AddItems(GOLD_NAME_STRING, quantity);
+        Gold += (uint)quantity;
     }
 
     public void RemoveGold(int quantity)
     {
-        RemoveItems(GOLD_NAME_STRING, quantity);
+        Gold -= (uint)quantity;
     }
 
     public bool ContainsItem(string itemName)
@@ -146,5 +143,10 @@ public class Inventory : MonoBehaviour
         PrintInventory();
 
         return true;
+    }
+
+    public ItemsCollection GetAllItems()
+    {
+        return inventory;
     }
 }

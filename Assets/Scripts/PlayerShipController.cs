@@ -64,6 +64,11 @@ public class PlayerShipController : MonoBehaviour
     void StartTradingWith(City city)
     {
         StopShip();
-        gameController.ShopScreen.OpenShop(inventory, city);
+        gameController.UIController.ShopWindow.OpenShop(inventory, city);
+    }
+
+    public void ToggleInventory()
+    {
+        gameController.UIController.InventoryWindow.ToggleInventory(inventory);
     }
 }

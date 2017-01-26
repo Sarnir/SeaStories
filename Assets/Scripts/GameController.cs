@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.EventSystems;
 
 public class GameController : MonoBehaviour {
 
     public PlayerShipController ActivePlayerShip;
     public float ScrollFactor;
     public float PanSensitivity;
-    public ShopScreen ShopScreen;
+    public UIController UIController;
 
     Camera mainCamera;
     Vector3 mouseOrigin;
@@ -30,7 +31,7 @@ public class GameController : MonoBehaviour {
 
     private void ProcessInput()
     {
-        if (ShopScreen.IsOpened())
+        if (UIController.ShopWindow.IsOpened())
             return;
 
         if (Input.GetMouseButtonDown(0))
@@ -56,7 +57,7 @@ public class GameController : MonoBehaviour {
             }
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
         {
             if (isLMBDown && !isCameraPanning)
                 HandleLeftClick();

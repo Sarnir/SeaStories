@@ -1,15 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
-public class ObjectPool<T>
+public class ObjectPool<T> where T : MonoBehaviour
 {
     List<T> pool;
-    public ObjectPool()
+    T prefab;
+    Transform parent;
+    public ObjectPool(T _prefab, Transform _parent)
     {
         pool = new List<T>();
+        prefab = _prefab;
+        parent = _parent;
     }
-    /*
-    public ShopItem GetElementFromPool()
+    
+    public T GetElementFromPool()
     {
         for (int i = 0; i < pool.Count; i++)
         {
@@ -20,8 +25,8 @@ public class ObjectPool<T>
             }
         }
 
-        ShopItem item;
-        item = Instantiate(ShopItemPrefab, transform, false);
+        T item;
+        item = Object.Instantiate(prefab, parent, false);
         item.gameObject.SetActive(true);
         pool.Add(item);
 
@@ -34,5 +39,5 @@ public class ObjectPool<T>
         {
             pool[i].gameObject.SetActive(false);
         }
-    }*/
+    }
 }

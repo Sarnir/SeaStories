@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ShopItem : MonoBehaviour
+public class UIItem : MonoBehaviour
 {
     [SerializeField]
     Text nameText;
-    [SerializeField]
-    Text priceText;
     [SerializeField]
     Text quantityText;
     [SerializeField]
@@ -20,15 +18,6 @@ public class ShopItem : MonoBehaviour
         get
         {
             return _definition;
-        }
-    }
-
-    int _price;
-    public int Price
-    {
-        get
-        {
-            return _price;
         }
     }
 
@@ -53,20 +42,12 @@ public class ShopItem : MonoBehaviour
         }
     }
     
-    public void SetItem(ItemDefinition itemDefinition, int quantity, int price)
+    public void SetItem(ItemDefinition itemDefinition, int quantity)
     {
         _definition = itemDefinition;
-        _price = price;
         _quantity = quantity;
         nameText.text = itemDefinition.Name;
-        priceText.text = price + " geld";
         quantityText.text = "x" + quantity;
         itemImage.sprite = itemDefinition.Icon;
-    }
-
-    public void SetTradeable(bool tradeable)
-    {
-        button.interactable = tradeable;
-        priceText.color = tradeable ? Color.black : Color.red;
     }
 }
