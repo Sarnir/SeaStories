@@ -19,10 +19,13 @@ ModelImporter:
     400010: Lamp
     2300000: Cube
     2300002: Cube.001
+    2300004: //RootNode
     3300000: Cube
     3300002: Cube.001
+    3300004: //RootNode
     4300000: Cube.001
     4300002: Cube
+    4300004: Boat
   materials:
     importMaterials: 1
     materialName: 0
