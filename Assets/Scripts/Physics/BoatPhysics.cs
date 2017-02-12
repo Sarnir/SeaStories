@@ -43,71 +43,6 @@ class TriangleData
         Area = CalculateArea(v1, v2, v3);
     }
 
-    public float GetHighest()
-    {
-        return Mathf.Max(V1.Pos.y, Mathf.Max(V2.Pos.y, V3.Pos.y));
-    }
-
-    public float GetLowest()
-    {
-        return Mathf.Min(V1.Pos.y, Mathf.Min(V2.Pos.y, V3.Pos.y));
-    }
-
-    public Vector3 CalculateBuoyancy(float rho, float waterLevel)
-    {
-        // F-> = -rho * g * h * area * n->
-
-        // for each submerged triangle calculate force get F
-        // list of fully submerged triangles is calculated above
-        // sum up all forces and use only y coord for now
-        var g = Physics.gravity.y;
-        if (Center.y < waterLevel)
-        {
-            var force = -rho * g * Center.y * Area * Normal;
-            return new Vector3(0f, force.y, 0f);
-        }
-        else
-            return Vector3.zero;
-    }
-
-    public Vector3 CalculatePressureDrag(Rigidbody rb, float dragCoefficient, float falloffPow, float waterLevel)
-    {
-        Vector3 drag = Vector3.zero;
-
-        if (Center.y < waterLevel)
-        {
-            var v = GetVelocity(rb);
-            var cosTheta = Vector3.Dot(v.normalized, Normal);
-            drag = -dragCoefficient * Area * Mathf.Sign(cosTheta) * Mathf.Pow(Mathf.Abs(cosTheta), falloffPow) * Normal;
-        }
-
-        return drag;
-    }
-
-    public Vector3 CalculateSlamming(float rho, float waterLevel)
-    {
-        return Vector3.zero;
-    }
-
-    public List<VertexData> GetSortedVertices(Vector3 center)
-    {
-        var list = new List<VertexData>();
-        list.Add(V1);
-        list.Add(V2);
-        list.Add(V3);
-
-        list.Sort((x, y) => Vector3.Angle(x.Pos, Center).CompareTo(Vector3.Angle(y.Pos, center)));
-
-        return list;
-    }
-
-    public Vector3 GetVelocity(Rigidbody body)
-    {
-        // vi = Vg + Omg x GCi
-
-        return body.velocity + Vector3.Cross(body.angularVelocity, Center - body.worldCenterOfMass);
-    }
-
     Vector3 CalculateCenter(Vector3 v1, Vector3 v2, Vector3 v3)
     {
         return (v1 + v2 + v3) / 3f;
@@ -155,22 +90,16 @@ class MeshData
     }
 }
 
-[RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(Rigidbody))]
 public class BoatPhysics : MonoBehaviour
 {
 
     public bool ShowSubmergedMesh;
-
-    public bool Buoyancy;
-    public bool PressureDrag;
-    public bool Slamming;
     
     public MeshFilter waterMesh;
-    public float rho = 997.8f;
-    public float dampConst = 1f;
-    public float DragCoefficient = 10f;
-    public float FallofPower = 0.9f;
+	public MeshFilter bodyMesh;
+    public float rho = 2f;
+    public float DragCoefficient = 1f;
 
     float g = Physics.gravity.y;
 
@@ -182,6 +111,8 @@ public class BoatPhysics : MonoBehaviour
     MeshData originalMeshData;
     List<TriangleData> submergedTris;
     float submergedArea;
+	Vector3 submergedCenter;
+	float angularDrag;
 
     // Use this for initialization
     void Start()
@@ -189,7 +120,9 @@ public class BoatPhysics : MonoBehaviour
         meshRenderer = GetComponent<MeshRenderer>();
         rigidBody = GetComponent<Rigidbody>();
         submergedTris = new List<TriangleData>();
-        originalMesh = GetComponent<MeshFilter>().mesh;
+		originalMesh = bodyMesh.mesh;
+
+		angularDrag = rigidBody.angularDrag;
 
         SetupMeshData(originalMesh);
     }
@@ -220,69 +153,46 @@ public class BoatPhysics : MonoBehaviour
         originalMeshData.CalculateCenter();
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         CheckUnderwaterVertices();
-        /*if(Buoyancy) CalculateBuoyancy();
-        CalculateDamp();
-        if(PressureDrag) CalculatePressureDrag();
-        if (Slamming) CalculateSlammingForce();*/
 
         ProcessPhysics();
+
+		if (ShowSubmergedMesh)
+			RenderSubmergedMesh();
     }
+
+	void ApplyBuoyancy()
+	{
+		if (submergedArea > 0f)
+		{
+			var velocity = rigidBody.velocity.y;
+			var Fb = rho * Mathf.Abs (g) * submergedArea;
+			var Fd = -0.5f * rho * Mathf.Sign(velocity) * velocity * velocity * submergedArea * DragCoefficient;
+
+			var force = new Vector3 (0f, Fb + Fd, 0f);
+
+			rigidBody.AddForceAtPosition (force, submergedCenter);
+			rigidBody.angularDrag = angularDrag + (DragCoefficient * submergedArea / originalMeshData.Area);
+		}
+	}
 
     void ProcessPhysics()
     {
-        submergedArea = 0;
-        var waterLevel = waterMesh.transform.TransformPoint(waterMesh.mesh.vertices[0]).y;
+        submergedArea = 0f;
+		submergedCenter = Vector3.zero;
         for (int i = 0; i < submergedTris.Count; i++)
         {
             Vector3 force = Vector3.zero;
             submergedArea += submergedTris[i].Area;
-
-            if (Buoyancy)
-            {
-                var buoyancy = submergedTris[i].CalculateBuoyancy(rho, waterLevel);
-                force += buoyancy;
-
-                Debug.DrawRay(submergedTris[i].Center, buoyancy.normalized * -3f, Color.blue);
-            }
-
-            if (PressureDrag)
-            {
-                var drag = submergedTris[i].CalculatePressureDrag(rigidBody, DragCoefficient, FallofPower, waterLevel);
-                force += drag;
-
-                Debug.DrawRay(submergedTris[i].Center, drag * 3f, Color.black);
-            }
-
-            if(Slamming)
-                force += submergedTris[i].CalculateSlamming(rho, waterLevel);
-
-            rigidBody.AddForceAtPosition(force, submergedTris[i].Center);
-
-            //Debug
-
-            //Normal
-            Debug.DrawRay(submergedTris[i].Center, submergedTris[i].Normal * 3f, Color.white);
-
-            //Buoyancy
-            
-
-            //Velocity
-            //Debug.DrawRay(triangleCenter, triangleVelocityDir * 3f, Color.black);
-
-            //Viscous Water Resistance
-            //Debug.DrawRay(triangleCenter, viscousWaterResistanceForce.normalized * 3f, Color.black);
+			submergedCenter += submergedTris [i].Center;    
         }
-    }
 
-    void Update()
-    {
-        //meshRenderer.enabled = !ShowSubmergedMesh;
-        if (ShowSubmergedMesh)
-            RenderSubmergedMesh();
+		if(submergedTris.Count > 0)
+			submergedCenter /= submergedTris.Count;
+
+		ApplyBuoyancy ();
     }
 
     void RenderSubmergedMesh()
@@ -293,18 +203,15 @@ public class BoatPhysics : MonoBehaviour
         int indiceNum = 0;
         for (int i = 0; i < submergedTris.Count; i++)
         {
-
-            var list = submergedTris[i].GetSortedVertices(originalMeshData.Center + transform.position);
-
-            vertices.Add(transform.InverseTransformPoint(list[0].Pos));
+			vertices.Add(transform.InverseTransformPoint(submergedTris[i].V1.Pos));
             tris[indiceNum] = vertices.Count - 1;
             indiceNum++;
 
-            vertices.Add(transform.InverseTransformPoint(list[1].Pos));
+			vertices.Add(transform.InverseTransformPoint(submergedTris[i].V2.Pos));
             tris[indiceNum] = vertices.Count - 1;
             indiceNum++;
 
-            vertices.Add(transform.InverseTransformPoint(list[2].Pos));
+			vertices.Add(transform.InverseTransformPoint(submergedTris[i].V3.Pos));
             tris[indiceNum] = vertices.Count - 1;
             indiceNum++;
         }
@@ -321,6 +228,7 @@ public class BoatPhysics : MonoBehaviour
             sMeshObj.transform.parent = transform;
             sMeshObj.transform.localPosition = Vector3.zero;
             sMeshObj.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+			sMeshObj.transform.localScale = Vector3.one;
         }
 
         submergedMeshFilter.mesh = submergedMesh;
@@ -403,67 +311,4 @@ public class BoatPhysics : MonoBehaviour
             Debug.DrawLine(intersectionPoints[i], intersectionPoints[i + 1], Color.red);
         }
     }
-
-    void CalculateBuoyancy()
-    {
-        // F-> = -rho * g * h * area * n->
-
-        // for each submerged triangle calculate force get F
-        // list of fully submerged triangles is calculated above
-        // sum up all forces and use only y coord for now
-        submergedArea = 0f;
-
-        for (int i = 0; i < submergedTris.Count; i++)
-        {
-            if (submergedTris[i].Center.y < waterMesh.transform.TransformPoint(waterMesh.mesh.vertices[0]).y)
-            {
-                var force = -rho * g * submergedTris[i].Center.y * submergedTris[i].Area * submergedTris[i].Normal;
-                rigidBody.AddForceAtPosition(new Vector3(0f, force.y, 0f), submergedTris[i].Center);
-                submergedArea += submergedTris[i].Area;
-            }
-        }
-    }
-
-    void CalculateDamp()
-    {
-        var rs = submergedArea / originalMeshData.Area;
-        var dampForce = -dampConst * rs * rigidBody.velocity;
-        var dampTorque = -dampConst * rs * rigidBody.angularVelocity;
-
-        rigidBody.AddForce(dampForce);
-        rigidBody.AddTorque(dampTorque);
-    }
-
-    void CalculatePressureDrag()
-    {
-        Vector3 drag = new Vector3();
-        for (int i = 0; i < submergedTris.Count; i++)
-        {
-            if (submergedTris[i].Center.y < waterMesh.transform.TransformPoint(waterMesh.mesh.vertices[0]).y)
-            {
-                var area = submergedTris[i].Area;
-                var n = submergedTris[i].Normal;
-                var v = submergedTris[i].GetVelocity(rigidBody);
-                var cosTheta = Vector3.Dot(v.normalized, n);
-                drag = -DragCoefficient * area * Mathf.Sign(cosTheta) * Mathf.Pow(Mathf.Abs(cosTheta), FallofPower) * n;
-                rigidBody.AddForceAtPosition(drag, submergedTris[i].Center);
-            }
-        }
-    }
-
-    void CalculateSlammingForce()
-    {
-        for (int i = 0; i < submergedTris.Count; i++)
-        {
-            if (submergedTris[i].Center.y < waterMesh.transform.TransformPoint(waterMesh.mesh.vertices[0]).y)
-            {
-                var n = submergedTris[i].Normal;
-                var v = submergedTris[i].GetVelocity(rigidBody);
-                var cosTheta = Vector3.Dot(v.normalized, n.normalized);
-                var force = ((2f * submergedArea * cosTheta) / originalMeshData.Area) * rigidBody.mass * rigidBody.velocity;
-                rigidBody.AddForceAtPosition(force, submergedTris[i].Center);
-            }
-        }
-    }
 }
-
