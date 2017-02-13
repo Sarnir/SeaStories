@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Sails : MonoBehaviour
 {
-	public WindZone Wind;
-
-	Cloth sailCloth;
+    public float DragCoefficient;
+    public float LiftCoefficient;
+    Cloth sailCloth;
 
 	// Use this for initialization
 	void Start ()
@@ -14,8 +14,13 @@ public class Sails : MonoBehaviour
 		sailCloth = GetComponent<Cloth> ();
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+	public float GetArea()
+    {
+        return 1f;
+    }
+
+    public Vector3 GetTrueWind()
+    {
+        return sailCloth.externalAcceleration;
+    }
 }

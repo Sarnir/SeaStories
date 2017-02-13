@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -95,6 +96,8 @@ public class BoatPhysics : MonoBehaviour
 {
 
     public bool ShowSubmergedMesh;
+
+    public Vector3 CenterOfMass;
     
     public MeshFilter waterMesh;
 	public MeshFilter bodyMesh;
@@ -107,6 +110,7 @@ public class BoatPhysics : MonoBehaviour
     MeshFilter submergedMeshFilter;
     Rigidbody rigidBody;
     MeshRenderer meshRenderer;
+    Sails sails;
 
     MeshData originalMeshData;
     List<TriangleData> submergedTris;
@@ -123,6 +127,9 @@ public class BoatPhysics : MonoBehaviour
 		originalMesh = bodyMesh.mesh;
 
 		angularDrag = rigidBody.angularDrag;
+        rigidBody.centerOfMass = CenterOfMass;
+
+        sails = GetComponentInChildren<Sails>();
 
         SetupMeshData(originalMesh);
     }
@@ -193,6 +200,42 @@ public class BoatPhysics : MonoBehaviour
 			submergedCenter /= submergedTris.Count;
 
 		ApplyBuoyancy ();
+        ApplySailForces ();
+    }
+
+    void ApplySailForces()
+    {
+        // we need to find Fr - Driving Force
+
+        // Va jest nam potrzebne do innych wzorów, liczy sie je z Vt - Vb
+        // Ft przykładamy do łodzi, składa się z Fr i Flat
+        // Ft może tez składać się z L i D
+
+        // Lift: L = 0.5 * rho * Va^2 * A * Cl
+        // Va - Apparent wind speed
+        // A - sail area
+        // Cl - lift coefficient
+
+        // Drag: j.w. ale z Cd zamiast Cl
+
+        if (sails == null || rigidBody == null)
+            return;
+
+        Vector3 apparentWindForce = sails.GetTrueWind() - rigidBody.velocity;
+
+        Vector3 drag = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
+            sails.GetArea() * sails.DragCoefficient * apparentWindForce.normalized;
+        Vector3 lift = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
+            sails.GetArea() * sails.LiftCoefficient *
+            Vector3.Cross(Vector3.down, apparentWindForce.normalized);
+        Vector3 sailForce = lift + drag;
+
+        Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
+        Debug.DrawRay(transform.position, apparentWindForce * 5f, Color.yellow);
+        Debug.DrawRay(transform.position, drag * 5f, Color.red);
+        Debug.DrawRay(transform.position, lift * 5f, Color.green);
+        Debug.DrawRay(transform.position, sailForce * 5f);
+        rigidBody.AddForce(sailForce);
     }
 
     void RenderSubmergedMesh()
@@ -310,5 +353,18 @@ public class BoatPhysics : MonoBehaviour
         {
             Debug.DrawLine(intersectionPoints[i], intersectionPoints[i + 1], Color.red);
         }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.magenta;
+        if (rigidBody)
+            Gizmos.DrawSphere(rigidBody.worldCenterOfMass, 0.1f);
+    }
+
+    void OnValidate()
+    {
+        if(rigidBody)
+            rigidBody.centerOfMass = CenterOfMass;
     }
 }
