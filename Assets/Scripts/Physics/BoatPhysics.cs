@@ -109,7 +109,6 @@ public class BoatPhysics : MonoBehaviour
     Mesh originalMesh;
     MeshFilter submergedMeshFilter;
     Rigidbody rigidBody;
-    MeshRenderer meshRenderer;
     Sails sails;
 
     MeshData originalMeshData;
@@ -121,7 +120,6 @@ public class BoatPhysics : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        meshRenderer = GetComponent<MeshRenderer>();
         rigidBody = GetComponent<Rigidbody>();
         submergedTris = new List<TriangleData>();
 		originalMesh = bodyMesh.mesh;
@@ -223,10 +221,13 @@ public class BoatPhysics : MonoBehaviour
 
         Vector3 apparentWindForce = sails.GetTrueWind() - rigidBody.velocity;
 
+		// TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
+		var angleOfAttack = Vector3.Angle (transform.up, apparentWindForce);
+		myLog = "Angle of attack: " + angleOfAttack;
         Vector3 drag = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
-            sails.GetArea() * sails.DragCoefficient * apparentWindForce.normalized;
+			sails.GetArea() * sails.GetDragCoefficient(angleOfAttack) * apparentWindForce.normalized;
         Vector3 lift = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
-            sails.GetArea() * sails.LiftCoefficient *
+			sails.GetArea() * sails.GetLiftCoefficient(angleOfAttack) *
             Vector3.Cross(Vector3.down, apparentWindForce.normalized);
         Vector3 sailForce = lift + drag;
 
@@ -237,6 +238,15 @@ public class BoatPhysics : MonoBehaviour
         Debug.DrawRay(transform.position, sailForce * 5f);
         rigidBody.AddForce(sailForce);
     }
+
+	string myLog;
+
+	void OnGUI ()
+	{
+		var style = new GUIStyle ();
+		style.fontSize = 40;
+		GUI.TextField (new Rect (10, 10, 120, 50), myLog, style);
+	}
 
     void RenderSubmergedMesh()
     {
