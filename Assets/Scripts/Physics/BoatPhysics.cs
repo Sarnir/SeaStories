@@ -99,7 +99,6 @@ public class BoatPhysics : MonoBehaviour
 
     public Vector3 CenterOfMass;
     
-    public MeshFilter waterMesh;
 	public MeshFilter bodyMesh;
     public float rho = 2f;
     public float DragCoefficient = 1f;
@@ -110,6 +109,7 @@ public class BoatPhysics : MonoBehaviour
     MeshFilter submergedMeshFilter;
     Rigidbody rigidBody;
     Sails sails;
+    Rudder rudder;
 
     MeshData originalMeshData;
     List<TriangleData> submergedTris;
@@ -128,6 +128,7 @@ public class BoatPhysics : MonoBehaviour
         rigidBody.centerOfMass = CenterOfMass;
 
         sails = GetComponentInChildren<Sails>();
+        rudder = GetComponentInChildren<Rudder>();
 
         SetupMeshData(originalMesh);
     }
@@ -172,16 +173,23 @@ public class BoatPhysics : MonoBehaviour
 	{
 		if (submergedArea > 0f)
 		{
-			var velocity = rigidBody.velocity.y;
-			var Fb = rho * Mathf.Abs (g) * submergedArea;
-			var Fd = -0.5f * rho * Mathf.Sign(velocity) * velocity * velocity * submergedArea * DragCoefficient;
-
-			var force = new Vector3 (0f, Fb + Fd, 0f);
+			var force = new Vector3 (0f, rho * Mathf.Abs(g) * submergedArea, 0f);
 
 			rigidBody.AddForceAtPosition (force, submergedCenter);
-			rigidBody.angularDrag = angularDrag + (DragCoefficient * submergedArea / originalMeshData.Area);
 		}
 	}
+
+    void ApplyWaterResistance()
+    {
+        if (submergedArea > 0f)
+        {
+            var velocity = rigidBody.velocity;
+            var Fd = -0.5f * rho * velocity.sqrMagnitude * velocity.normalized * submergedArea * DragCoefficient;
+            
+            rigidBody.AddForceAtPosition(Fd, submergedCenter);
+            rigidBody.angularDrag = angularDrag + (DragCoefficient * submergedArea / originalMeshData.Area);
+        }
+    }
 
     void ProcessPhysics()
     {
@@ -198,54 +206,70 @@ public class BoatPhysics : MonoBehaviour
 			submergedCenter /= submergedTris.Count;
 
 		ApplyBuoyancy ();
+        ApplyRudderForces();
         ApplySailForces ();
+        ApplyWaterResistance ();
+    }
+
+    void ApplyRudderForces()
+    {
+        var vel = rigidBody.velocity;
+        vel.y = 0f;
+        var velocityParam = Mathf.Clamp01(vel.magnitude);
+        float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.GetAngle());
+        rigidBody.AddTorque(0f, force, 0f);
     }
 
     void ApplySailForces()
     {
-        // we need to find Fr - Driving Force
-
-        // Va jest nam potrzebne do innych wzorów, liczy sie je z Vt - Vb
-        // Ft przykładamy do łodzi, składa się z Fr i Flat
-        // Ft może tez składać się z L i D
-
-        // Lift: L = 0.5 * rho * Va^2 * A * Cl
-        // Va - Apparent wind speed
-        // A - sail area
-        // Cl - lift coefficient
-
-        // Drag: j.w. ale z Cd zamiast Cl
-
-        if (sails == null || rigidBody == null)
+        if (sails == null || rigidBody == null || submergedArea <= 0f)
             return;
 
         Vector3 apparentWindForce = sails.GetTrueWind() - rigidBody.velocity;
 
-		// TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
-		var angleOfAttack = Vector3.Angle (transform.up, apparentWindForce);
+        // TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
+        var angleOfAttack = 180f + Utils.Math.AngleSigned(transform.up, apparentWindForce, Vector3.up); // Vector3.Angle (transform.up, apparentWindForce);
 		myLog = "Angle of attack: " + angleOfAttack;
         Vector3 drag = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
 			sails.GetArea() * sails.GetDragCoefficient(angleOfAttack) * apparentWindForce.normalized;
         Vector3 lift = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
 			sails.GetArea() * sails.GetLiftCoefficient(angleOfAttack) *
-            Vector3.Cross(Vector3.down, apparentWindForce.normalized);
-        Vector3 sailForce = lift + drag;
+            Vector3.Cross(Vector3.up, apparentWindForce.normalized);
+        
+        float sign = 1f;
+        if(angleOfAttack > 180f)
+        {
+            angleOfAttack = 180f - angleOfAttack;
+            sign = -1f;
+        }
+        var forwardForce = (lift.magnitude * Mathf.Sin(Mathf.Deg2Rad * angleOfAttack) -
+            drag.magnitude * Mathf.Cos(Mathf.Deg2Rad * angleOfAttack)) * transform.up * sign;
 
-        Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
+        var lateralForce = (lift.magnitude * Mathf.Cos(Mathf.Deg2Rad * angleOfAttack) +
+            drag.magnitude * Mathf.Sin(Mathf.Deg2Rad * angleOfAttack)) *
+            -Vector3.Cross(Vector3.up, forwardForce.normalized);
+
+        //Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
         Debug.DrawRay(transform.position, apparentWindForce * 5f, Color.yellow);
         Debug.DrawRay(transform.position, drag * 5f, Color.red);
         Debug.DrawRay(transform.position, lift * 5f, Color.green);
-        Debug.DrawRay(transform.position, sailForce * 5f);
-        rigidBody.AddForce(sailForce);
+        Debug.DrawRay(transform.position, lateralForce * 5f, Color.blue);
+        Debug.DrawRay(transform.position, forwardForce * 5f, Color.black);
+        rigidBody.AddForceAtPosition(forwardForce, submergedCenter);
+        rigidBody.AddForceAtPosition(lateralForce, new Vector3(submergedCenter.x, sails.GetCenter().y, submergedCenter.z));
+        rigidBody.AddForceAtPosition(-lateralForce, submergedCenter);
     }
 
 	string myLog;
 
 	void OnGUI ()
 	{
-		var style = new GUIStyle ();
-		style.fontSize = 40;
-		GUI.TextField (new Rect (10, 10, 120, 50), myLog, style);
+        if (!string.IsNullOrEmpty(myLog))
+        {
+            var style = new GUIStyle();
+            style.fontSize = 40;
+            GUI.TextField(new Rect(10, 10, 120, 50), myLog, style);
+        }
 	}
 
     void RenderSubmergedMesh()
@@ -295,7 +319,7 @@ public class BoatPhysics : MonoBehaviour
         var vertices = originalMesh.vertices;
         var tris = originalMesh.triangles;
         // for now let's say that water is perfectly flat
-        float waterY = waterMesh.transform.position.y;
+        //float waterY = waterMesh.transform.position.y;
 
         List<Vector3> intersectionPoints = new List<Vector3>();
 
@@ -307,9 +331,9 @@ public class BoatPhysics : MonoBehaviour
             triangle.Add(transform.TransformPoint(originalMeshData.Triangles[i].V2.Pos));
             triangle.Add(transform.TransformPoint(originalMeshData.Triangles[i].V3.Pos));
 
-            float d1 = triangle[0].y - waterY;
-            float d2 = triangle[1].y - waterY;
-            float d3 = triangle[2].y - waterY;
+            float d1 = triangle[0].y - WaterController.Instance.GetWaterYPos(triangle[0]);
+            float d2 = triangle[1].y - WaterController.Instance.GetWaterYPos(triangle[1]);
+            float d3 = triangle[2].y - WaterController.Instance.GetWaterYPos(triangle[2]);
 
             if (d1 > 0f && d2 > 0f && d3 > 0f)
             {
@@ -326,11 +350,15 @@ public class BoatPhysics : MonoBehaviour
                 triangle.Sort((x, y) => x.y.CompareTo(y.y));
                 triangle.Reverse();
 
-                if (triangle[0].y - waterY > 0f && triangle[1].y - waterY > 0f)
+                d1 = triangle[0].y - WaterController.Instance.GetWaterYPos(triangle[0]);
+                d2 = triangle[1].y - WaterController.Instance.GetWaterYPos(triangle[1]);
+                d3 = triangle[2].y - WaterController.Instance.GetWaterYPos(triangle[2]);
+
+                if (d1 > 0f && d2 > 0f)
                 {
                     // two tris above
-                    float tm = (-triangle[2].y - waterY) / (triangle[1].y - waterY - (triangle[2].y - waterY));
-                    float th = (-triangle[2].y - waterY) / (triangle[0].y - waterY - (triangle[2].y - waterY));
+                    float tm = (-d3) / (d2 - d3);
+                    float th = (-d3) / (d1 - (d3));
 
                     Vector3 Jm = triangle[2] + (triangle[1] - triangle[2]) * tm;
                     Vector3 Jh = triangle[2] + (triangle[0] - triangle[2]) * th;
@@ -343,8 +371,8 @@ public class BoatPhysics : MonoBehaviour
                 else
                 {
                     // one tris above
-                    float tm = (-triangle[1].y - waterY) / (triangle[0].y - waterY - (triangle[1].y - waterY));
-                    float tl = (-triangle[2].y - waterY) / (triangle[0].y - waterY - (triangle[2].y - waterY));
+                    float tm = (-d2) / (d1 - (d2));
+                    float tl = (-d3) / (d1 - (d3));
 
                     Vector3 Im = triangle[1] + (triangle[0] - triangle[1]) * tm;
                     Vector3 Il = triangle[2] + (triangle[0] - triangle[2]) * tl;

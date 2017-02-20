@@ -18,6 +18,8 @@ public class Sails : MonoBehaviour
 
     Cloth sailCloth;
 
+    float sailArea;
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -26,17 +28,44 @@ public class Sails : MonoBehaviour
 	
 	public float GetArea()
     {
-        return 1f;
+        return sailArea;
+    }
+
+    public Vector3 GetCenter()
+    {
+        return transform.position;
+    }
+
+    public void SpreadSails()
+    {
+        if (sailArea >= 1f)
+        {
+            sailArea = 1f;
+            return;
+        }
+        sailArea += 0.01f;
+    }
+
+    public void FurlSails()
+    {
+        if(sailArea <= 0f)
+        {
+            sailArea = 0f;
+            return;
+        }
+        sailArea -= 0.01f;
     }
 
 	public float GetDragCoefficient(float angle)
 	{
-		return GetAngleCoefficient (dragCoefficient, angle);
+        angle = Utils.Math.ClampAngleBetween0360(angle);
+        return GetAngleCoefficient (dragCoefficient, angle);
 	}
 
 	public float GetLiftCoefficient(float angle)
 	{
-		return GetAngleCoefficient (liftCoefficient, angle);
+        angle = Utils.Math.ClampAngleBetween0360(angle);
+		return Mathf.Sign(180f - angle) * GetAngleCoefficient (liftCoefficient, angle);
 	}
 
 	protected float GetAngleCoefficient(AngleCoefficient[] coefficient, float angle)
@@ -44,22 +73,20 @@ public class Sails : MonoBehaviour
 		if (coefficient == null || coefficient.Length < 2)
 			return float.NaN;
 
-		while (angle < 0)
-			angle += 360f;
+        // angle is supposed to be <0;360> at this point
+        if (angle > 180)
+            angle = 360f - angle;
 
-		while (angle > 360)
-			angle -= 360f;
-
-		// angle is supposed to be 0-360 at this point
-		AngleCoefficient last;
+        AngleCoefficient last;
 		AngleCoefficient current = coefficient[1];
+        
 		for (int i = 1; i < coefficient.Length; i++)
 		{
 			last = coefficient [i - 1];
 			current = coefficient [i];
 			if (angle >= last.Angle && angle <= current.Angle)
 			{
-				return Mathf.Lerp (last.Value, current.Value, angle/current.Angle);
+				return Mathf.Lerp (last.Value, current.Value, (angle - last.Angle)/(current.Angle - last.Angle));
 			}
 		}
 
