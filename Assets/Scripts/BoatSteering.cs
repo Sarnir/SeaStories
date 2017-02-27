@@ -6,11 +6,13 @@ public class BoatSteering : MonoBehaviour
 {
     Rudder rudder;
     Sails sails;
-	
+    ShipWeapons weapons;
+
 	void Start ()
     {
         rudder = GetComponentInChildren<Rudder>();
         sails = GetComponentInChildren<Sails>();
+        weapons = GetComponent<ShipWeapons>();
 	}
 	
 	// Update is called once per frame
@@ -33,6 +35,11 @@ public class BoatSteering : MonoBehaviour
         {
             // sails down
             sails.FurlSails();
+        }
+        else if(Input.GetKeyDown(KeyCode.Space))
+        {
+            // fire!
+            weapons.FireCannons();
         }
     }
 }

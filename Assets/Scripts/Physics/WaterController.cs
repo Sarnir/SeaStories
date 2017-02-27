@@ -17,6 +17,7 @@ public class WaterController : MonoBehaviour
     public static WaterController Instance;
 
     Mesh lastMesh;
+    Vector3 currentWind;
 
     void Start ()
     {
@@ -29,6 +30,7 @@ public class WaterController : MonoBehaviour
 
     void Update()
     {
+        currentWind = WeatherController.Instance.GetWindVector();
         UpdateWater();
     }
 
@@ -53,7 +55,8 @@ public class WaterController : MonoBehaviour
 
     public float GetWaterYPos(Vector3 pos)
     {
-        return waveHeight*Mathf.Sin(waveSpeed * Time.frameCount + waveScale * pos.x);
+        return currentWind.magnitude*waveHeight*Mathf.Sin(waveSpeed * Time.frameCount + waveScale *
+            (currentWind.normalized.x * -pos.x + currentWind.normalized.z * -pos.z));
     }
 
     void CreateMesh()

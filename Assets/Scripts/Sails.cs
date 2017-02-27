@@ -26,6 +26,11 @@ public class Sails : MonoBehaviour
 		sailCloth = GetComponent<Cloth> ();
 	}
 	
+    void Update()
+    {
+        sailCloth.externalAcceleration = WeatherController.Instance.GetWindVector();
+    }
+
 	public float GetArea()
     {
         return sailArea;
