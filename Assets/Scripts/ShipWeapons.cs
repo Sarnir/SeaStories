@@ -30,7 +30,7 @@ public class ShipWeapons : MonoBehaviour
         
         for (int i = 0; i < Cannons.Length; i++)
         {
-            Cannons[i].Fire();
+            Cannons[i].Fire(Random.value);
         }
 
         currentCooldown = ReloadCooldown;

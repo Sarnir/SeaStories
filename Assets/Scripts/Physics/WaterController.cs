@@ -53,8 +53,15 @@ public class WaterController : MonoBehaviour
         meshFilter.mesh = lastMesh;
     }
 
+    public bool useGerstner;
+
     public float GetWaterYPos(Vector3 pos)
     {
+        if(useGerstner)
+        {
+            return 0f;
+        }
+
         return currentWind.magnitude*waveHeight*Mathf.Sin(waveSpeed * Time.frameCount + waveScale *
             (currentWind.normalized.x * -pos.x + currentWind.normalized.z * -pos.z));
     }

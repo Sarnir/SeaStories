@@ -97,7 +97,14 @@ public class BoatPhysics : MonoBehaviour
 
     public bool ShowSubmergedMesh;
 
-    public Vector3 CenterOfMass;
+    [SerializeField]
+    Vector3 centerOfMass;
+
+    public Vector3 CenterOfMass
+    {
+        get { return rigidBody.centerOfMass; }
+        set { rigidBody.centerOfMass = value; }
+    }
     
 	public MeshFilter bodyMesh;
     public float rho = 2f;
@@ -125,7 +132,7 @@ public class BoatPhysics : MonoBehaviour
 		originalMesh = bodyMesh.mesh;
 
 		angularDrag = rigidBody.angularDrag;
-        rigidBody.centerOfMass = CenterOfMass;
+        rigidBody.centerOfMass = centerOfMass;
 
         sails = GetComponentInChildren<Sails>();
         rudder = GetComponentInChildren<Rudder>();
@@ -264,6 +271,7 @@ public class BoatPhysics : MonoBehaviour
 
 	void OnGUI ()
 	{
+        return;
         if (!string.IsNullOrEmpty(myLog))
         {
             var style = new GUIStyle();
@@ -403,6 +411,6 @@ public class BoatPhysics : MonoBehaviour
     void OnValidate()
     {
         if(rigidBody)
-            rigidBody.centerOfMass = CenterOfMass;
+            rigidBody.centerOfMass = centerOfMass;
     }
 }
