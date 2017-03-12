@@ -6,7 +6,6 @@ using UnityEngine;
 
 [RequireComponent(typeof(MeshRenderer))]
 [RequireComponent(typeof(MeshFilter))]
-[RequireComponent(typeof(BoxCollider))]
 public class WorldGenerator : MonoBehaviour
 {
     public int Width;
@@ -36,7 +35,6 @@ public class WorldGenerator : MonoBehaviour
     int[] indices;
     MeshFilter meshFilter;
     MeshRenderer meshRenderer;
-    BoxCollider meshCollider;
 
     List<SeaStories.TerrainTile> landTerrain = new List<SeaStories.TerrainTile>();
     List<SeaStories.TerrainTile> shoreTiles = new List<SeaStories.TerrainTile>();
@@ -51,7 +49,6 @@ public class WorldGenerator : MonoBehaviour
     {
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<MeshRenderer>();
-        meshCollider = GetComponent<BoxCollider>();
 
         landTerrain.Clear();
         shoreTiles.Clear();
@@ -94,9 +91,6 @@ public class WorldGenerator : MonoBehaviour
 
         meshRenderer.sharedMaterial.mainTexture = texture;
         meshRenderer.sharedMaterial.mainTextureOffset = new Vector2(-1/(Width*2f), 1/(Length*2f));
-
-        meshCollider.center = new Vector3((Width - 1) * 0.5f, 0f, (Length - 1) * 0.5f);
-        meshCollider.size = new Vector3(Width - 1, 0f, Length - 1);
     }
 
     void GenerateMesh(float[] heightMap)

@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 public class GameController : MonoBehaviour {
 
-    public PlayerShipController ActivePlayerShip;
+    public PlayerController ActivePlayer;
     public float ScrollFactor;
     public float PanSensitivity;
     public UIController UIController;
@@ -52,16 +52,13 @@ public class GameController : MonoBehaviour {
 
             if (isCameraPanning)
             {
-                mainCamera.transform.Translate(mouseDeltaPos * PanSensitivity);
+                mainCamera.transform.Translate(new Vector3(mouseDeltaPos.x, 0f, mouseDeltaPos.y) * PanSensitivity, Space.World);
                 mouseOrigin = Input.mousePosition;
             }
         }
 
         if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
         {
-            if (isLMBDown && !isCameraPanning)
-                HandleLeftClick();
-
             isCameraPanning = false;
             isLMBDown = false;
         }
@@ -77,18 +74,23 @@ public class GameController : MonoBehaviour {
 
     private void HandleScrollWheel(float scrollValue)
     {
-        mainCamera.orthographicSize += scrollValue * ScrollFactor;
+        mainCamera.transform.Translate(new Vector3(0f, 0f, scrollValue) * ScrollFactor, Space.Self);
     }
 
-    private void HandleLeftClick()
+    public void OpenShop(City city)
     {
-        if(ActivePlayerShip != null)
-        {
-            var hitInfo = new RaycastHit();
-            if (Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition), out hitInfo))
-            {
-                ActivePlayerShip.SailToPosition(hitInfo.point);
-            }
-        }
+        UIController.ShopWindow.OpenShop(ActivePlayer.Inventory, city);
+    }
+
+    public void CloseShop()
+    {
+        UIController.ShopWindow.Close();
+        ActivePlayer.LeaveCity();
+    }
+
+    public void ToggleInventory()
+    {
+        UIController.InventoryWindow.ToggleInventory(ActivePlayer.Inventory);
+        ActivePlayer.IsConsumingFood = !ActivePlayer.IsConsumingFood;
     }
 }

@@ -34,7 +34,7 @@ public class BoatSteering : MonoBehaviour
         else if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
         {
             // sails down
-            sails.FurlSails();
+            sails.ReefSails();
         }
         else if(Input.GetKeyDown(KeyCode.Space))
         {

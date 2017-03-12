@@ -405,7 +405,7 @@ public class BoatPhysics : MonoBehaviour
     {
         Gizmos.color = Color.magenta;
         if (rigidBody)
-            Gizmos.DrawSphere(rigidBody.worldCenterOfMass, 0.1f);
+            Gizmos.DrawSphere(rigidBody.worldCenterOfMass, 0.01f);
     }
 
     void OnValidate()

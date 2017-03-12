@@ -14,8 +14,9 @@ public class City : MonoBehaviour
         cityObject.transform.parent = parent;
         cityObject.transform.localPosition = position;
         var coll = cityObject.AddComponent<BoxCollider>();
+        coll.isTrigger = true;
         coll.center = new Vector3(0f, 0.5f, 0f);
-        coll.size = new Vector3(1.5f, 1f, 1.5f);
+        coll.size = new Vector3(1.5f * parent.localScale.x, 1f, 1.5f * parent.localScale.z);
 
         var city = cityObject.AddComponent<City>();
         city.inventory = cityObject.AddComponent<Inventory>();
@@ -42,6 +43,13 @@ public class City : MonoBehaviour
     {
         string message = string.Format("OnTriggerEnter: Object {0} collided with city named {1}", other.gameObject.name, name);
         Debug.Log(message);
+
+        if(other.isTrigger && other.gameObject.tag == "Player")
+        {
+            var player = other.GetComponent<PlayerController>();
+
+            player.EnterCity(this);
+        }
     }
 
     public ItemsCollection GetItemsForSale()

@@ -27,12 +27,12 @@ public class UIWindow : MonoBehaviour
         return canvas.enabled;
     }
 
-    public void Close()
+    public virtual void Close()
     {
         canvas.enabled = false;
     }
 
-    public void Open()
+    public virtual void Open()
     {
         canvas.enabled = true;
         OnOpened();

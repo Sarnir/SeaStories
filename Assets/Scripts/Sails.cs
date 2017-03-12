@@ -51,14 +51,18 @@ public class Sails : MonoBehaviour
         sailArea += 0.01f;
     }
 
-    public void FurlSails()
+    public void ReefSails(bool max = false)
     {
         if(sailArea <= 0f)
         {
             sailArea = 0f;
             return;
         }
-        sailArea -= 0.01f;
+
+        if (max)
+            sailArea = 0f;
+        else
+            sailArea -= 0.01f;
     }
 
 	public float GetDragCoefficient(float angle)

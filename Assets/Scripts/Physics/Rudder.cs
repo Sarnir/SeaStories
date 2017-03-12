@@ -10,7 +10,13 @@ public class Rudder : MonoBehaviour
 
     float Angle
     {
-        get { return transform.localRotation.eulerAngles.z; }
+        get
+        {
+            var angle = transform.localRotation.eulerAngles.z;
+            if (angle > 180f)
+                angle -= 360f;
+            return angle;
+        }
         set
         {
             transform.localRotation = Quaternion.Euler(
@@ -27,19 +33,22 @@ public class Rudder : MonoBehaviour
 
     public void SteerLeft()
     {
-        //if(Angle < MaxAngle)
+        if(Angle < MaxAngle)
             transform.Rotate(new Vector3(0f, 0f, TurningSpeed));
     }
 
     public void SteerRight()
     {
-        //if(Angle > -MaxAngle)
+        if(Angle > -MaxAngle)
             transform.Rotate(new Vector3(0f, 0f, -TurningSpeed));
     }
 
     void Update()
     {
         // dodać metodę na clampowanie stopni do określonej wartości do Math biblioteki
-        //Angle = Mathf.SmoothStep(Angle, 0f, 1f -Mathf.Abs(Angle)/MaxAngle);
+        if (Mathf.Abs(Angle) != 0f)
+        {
+            Angle -= (Angle / MaxAngle) * TurningSpeed;
+        }
     }
 }
