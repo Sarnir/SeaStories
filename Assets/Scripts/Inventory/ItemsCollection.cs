@@ -2,21 +2,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class ItemsDictionary : Dictionary<ItemName, uint> {}
+
 public class ItemsCollection
 {
-    Dictionary<string, uint> dictionary;
+	ItemsDictionary dictionary;
 
     public ItemsCollection()
     {
-        dictionary = new Dictionary<string, uint>();
+		dictionary = new ItemsDictionary();
     }
 
-    public Dictionary<string, uint>.Enumerator GetEnumerator()
+	public ItemsDictionary.Enumerator GetEnumerator()
     {
         return dictionary.GetEnumerator();
     }
 
-    public uint GetItemQuantity(string name)
+	public uint GetItemQuantity(ItemName name)
     {
         if (dictionary.ContainsKey(name))
             return dictionary[name];
@@ -24,12 +27,12 @@ public class ItemsCollection
             return 0;
     }
 
-    public bool ContainsItem(string name)
+	public bool ContainsItem(ItemName name)
     {
         return dictionary.ContainsKey(name);
     }
 
-    public void SetItemQuantity(string name, uint quantity)
+	public void SetItemQuantity(ItemName name, uint quantity)
     {
         if (dictionary.ContainsKey(name))
             dictionary[name] = quantity;
@@ -37,7 +40,7 @@ public class ItemsCollection
             dictionary.Add(name, quantity);
     }
 
-    public void SetItemQuantity(string name, int quantity)
+	public void SetItemQuantity(ItemName name, int quantity)
     {
         if (quantity < 1)
             return;
@@ -45,12 +48,12 @@ public class ItemsCollection
         SetItemQuantity(name, (uint)quantity);
     }
 
-    public void AddItem(string name)
+	public void AddItem(ItemName name)
     {
         AddItems(name, 1);
     }
 
-    public void AddItems(string name, int quantity)
+	public void AddItems(ItemName name, int quantity)
     {
         if (quantity < 1)
             return;
@@ -58,7 +61,7 @@ public class ItemsCollection
         AddItems(name, (uint)quantity);
     }
 
-    public void AddItems(string name, uint quantity)
+	public void AddItems(ItemName name, uint quantity)
     {
         if (dictionary.ContainsKey(name))
             dictionary[name] += quantity;
@@ -66,7 +69,7 @@ public class ItemsCollection
             dictionary.Add(name, quantity);
     }
 
-    public void RemoveItem(string name, int quantity)
+	public void RemoveItem(ItemName name, int quantity)
     {
         if (quantity < 1)
             return;
@@ -74,7 +77,7 @@ public class ItemsCollection
         RemoveItem(name, (uint)quantity);
     }
 
-    public void RemoveItem(string name, uint quantity)
+	public void RemoveItem(ItemName name, uint quantity)
     {
         if(dictionary.ContainsKey(name))
         {

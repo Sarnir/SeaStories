@@ -39,7 +39,8 @@ public class BoatSteering : MonoBehaviour
         else if(Input.GetKeyDown(KeyCode.Space))
         {
             // fire!
-            weapons.FireCannons();
+			if(weapons != null)
+            	weapons.FireCannons();
         }
     }
 }

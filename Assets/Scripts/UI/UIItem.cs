@@ -46,7 +46,7 @@ public class UIItem : MonoBehaviour
     {
         _definition = itemDefinition;
         _quantity = quantity;
-        nameText.text = itemDefinition.Name;
+		nameText.text = itemDefinition.NameString;
         quantityText.text = "x" + quantity;
         itemImage.sprite = itemDefinition.Icon;
     }

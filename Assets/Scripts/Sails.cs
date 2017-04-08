@@ -41,28 +41,24 @@ public class Sails : MonoBehaviour
         return transform.position;
     }
 
-    public void SpreadSails()
+	public void SpreadSails(bool max = false)
     {
-        if (sailArea >= 1f)
+		sailArea += 0.25f;
+
+		if (sailArea >= 1f || max)
         {
             sailArea = 1f;
-            return;
         }
-        sailArea += 0.01f;
     }
 
     public void ReefSails(bool max = false)
     {
-        if(sailArea <= 0f)
+		sailArea -= 0.25f;
+
+        if(sailArea <= 0f || max)
         {
             sailArea = 0f;
-            return;
         }
-
-        if (max)
-            sailArea = 0f;
-        else
-            sailArea -= 0.01f;
     }
 
 	public float GetDragCoefficient(float angle)

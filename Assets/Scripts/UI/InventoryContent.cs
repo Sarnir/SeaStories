@@ -44,7 +44,7 @@ public class InventoryContent : MonoBehaviour
         }
     }
 
-    void CreateInventoryItem(string itemName, uint quantity, Transform parent)
+	void CreateInventoryItem(ItemName itemName, uint quantity, Transform parent)
     {
         InventoryItem item = inventoryItemsPool.GetElementFromPool();
 

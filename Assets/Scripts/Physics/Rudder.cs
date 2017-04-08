@@ -7,6 +7,9 @@ public class Rudder : MonoBehaviour
     public float RudderCoefficient;
     public float TurningSpeed;
     public float MaxAngle;
+	public float MinTurningForce;
+
+	Quaternion originRotation;
 
     float Angle
     {
@@ -42,6 +45,16 @@ public class Rudder : MonoBehaviour
         if(Angle > -MaxAngle)
             transform.Rotate(new Vector3(0f, 0f, -TurningSpeed));
     }
+
+	public void Reset()
+	{
+		transform.rotation = originRotation;
+	}
+
+	void Start()
+	{
+		originRotation = transform.rotation;
+	}
 
     void Update()
     {

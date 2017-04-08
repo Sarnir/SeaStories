@@ -19,16 +19,16 @@ public class City : MonoBehaviour
         coll.size = new Vector3(1.5f * parent.localScale.x, 1f, 1.5f * parent.localScale.z);
 
         var city = cityObject.AddComponent<City>();
-        city.inventory = cityObject.AddComponent<Inventory>();
+		city.inventory = new Inventory ();
         city.inventory.Setup();
-        city.inventory.AddItems("Spices", Random.Range(1, 100));
+		city.inventory.AddItems(ItemName.Spices, Random.Range(1, 100));
         city.inventory.AddGold(Random.Range(1, 100));
 
         city.itemsToBuy = new ItemsCollection();
-        city.itemsToBuy.AddItems("Tobacco", Random.Range(1, 10));
+		city.itemsToBuy.AddItems(ItemName.Tobacco, Random.Range(1, 10));
 
         city.itemsToSell = new ItemsCollection();
-        city.itemsToSell.AddItems("Spices", Random.Range(1, 10));
+		city.itemsToSell.AddItems(ItemName.Spices, Random.Range(1, 10));
 
         return city;
     }

@@ -54,7 +54,7 @@ public class ShopContent : MonoBehaviour
         }
     }
 
-    ShopItem CreateShopItem(string itemName, uint quantity, uint price, Transform parent)
+	ShopItem CreateShopItem(ItemName itemName, uint quantity, uint price, Transform parent)
     {
         ShopItem item = shopItemsPool.GetElementFromPool();
 

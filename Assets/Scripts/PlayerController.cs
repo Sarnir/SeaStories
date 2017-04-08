@@ -3,39 +3,45 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-public class PlayerController : MonoBehaviour
+[System.Serializable]
+public struct ItemsQuantities
+{
+	public ItemName name;
+	public uint quantity;
+}
+
+public class PlayerController : ShipController
 {
     public bool LogsEnabled;
-    
-    public Inventory Inventory;
+	public bool IsConsumingFood;
+
+	public ItemsQuantities[] StartingItems;
     GameController gameController;
-    Sails sails;
 
     float currentFoodUnitLeft;
-
-    public bool IsConsumingFood;
 
     void Start()
     {
         IsConsumingFood = true;
-        Inventory = GetComponent<Inventory>();
-        Inventory.Setup();
-        Inventory.AddGold(50);
-        Inventory.AddItems("Tobacco", 3);
-        Inventory.AddItems("Food", 5);
-        gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
-        sails = GetComponentInChildren<Sails>();
+
+		gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+		sails = GetComponentInChildren<Sails> ();
+		rudder = GetComponentInChildren<Rudder> ();
+
+		ItemsDictionary dict = new ItemsDictionary ();
+
+		for (int i = 0; i < StartingItems.Length; i++)
+		{
+			dict.Add (StartingItems [i].name, StartingItems [i].quantity);
+		}
+
+		SetupInventory (dict);
     }
 
     void Update()
     {
         if (IsConsumingFood)
             ConsumeFoodStep();
-    }
-
-    void StopShip()
-    {
-        sails.ReefSails(true);
     }
 
     /*void OnTriggerEnter(Collider other)
@@ -62,7 +68,7 @@ public class PlayerController : MonoBehaviour
 
     public float GetCurrentFood()
     {
-        return Inventory.GetQuantity("Food") + currentFoodUnitLeft;
+		return inventory.GetQuantity(ItemName.Food) + currentFoodUnitLeft;
     }
 
     void ConsumeFoodStep()
@@ -72,9 +78,9 @@ public class PlayerController : MonoBehaviour
 
         if(currentFoodUnitLeft < 0f)
         {
-            if (Inventory.GetQuantity("Food") > 0)
+			if (inventory.GetQuantity(ItemName.Food) > 0)
             {
-                Inventory.RemoveItem("Food");
+				inventory.RemoveItem(ItemName.Food);
                 currentFoodUnitLeft += 1f;
             }
             else

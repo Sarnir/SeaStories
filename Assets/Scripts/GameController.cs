@@ -79,7 +79,7 @@ public class GameController : MonoBehaviour {
 
     public void OpenShop(City city)
     {
-        UIController.ShopWindow.OpenShop(ActivePlayer.Inventory, city);
+		UIController.ShopWindow.OpenShop(ActivePlayer.GetInventory(), city);
     }
 
     public void CloseShop()
@@ -90,7 +90,7 @@ public class GameController : MonoBehaviour {
 
     public void ToggleInventory()
     {
-        UIController.InventoryWindow.ToggleInventory(ActivePlayer.Inventory);
+		UIController.InventoryWindow.ToggleInventory(ActivePlayer.GetInventory());
         ActivePlayer.IsConsumingFood = !ActivePlayer.IsConsumingFood;
     }
 }

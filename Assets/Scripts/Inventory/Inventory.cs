@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Inventory : MonoBehaviour
+public class Inventory
 {
     public uint Gold
     {
@@ -21,10 +21,6 @@ public class Inventory : MonoBehaviour
     private uint _gold;
 
     ItemsCollection inventory;
-	void Start ()
-    {
-        Setup();
-	}
 
     public void Setup()
     {
@@ -34,31 +30,22 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    public void Setup(uint startingGold, Dictionary<string, uint> startingItems)
+	public void Setup(uint startingGold, ItemsDictionary startingItems)
     {
         Gold = startingGold;
 
-        foreach (KeyValuePair<string, uint> item in startingItems)
+		foreach (KeyValuePair<ItemName, uint> item in startingItems)
         {
             AddItems(item.Key, item.Value);
         }
     }
 
-    void PrintInventory()
-    {
-        Debug.Log("Items in inventory of " + name + ":");
-        foreach(var item in inventory)
-        {
-            Debug.Log(item.Key + " - " + item.Value);
-        }
-    }
-
-    public uint GetQuantity(string itemName)
+	public uint GetQuantity(ItemName itemName)
     {
         return inventory.GetItemQuantity(itemName);
     }
 
-    public void AddItem(string itemName)
+	public void AddItem(ItemName itemName)
     {
         AddItems(itemName, 1);
     }
@@ -73,7 +60,7 @@ public class Inventory : MonoBehaviour
         AddItems(item.Name, quantity);
     }
 
-    public void AddItems(string itemName, int quantity)
+	public void AddItems(ItemName itemName, int quantity)
     {
         if (quantity < 1)
             return;
@@ -81,7 +68,7 @@ public class Inventory : MonoBehaviour
         AddItems(itemName, (uint)quantity);
     }
 
-    public void AddItems(string itemName, uint quantity)
+	public void AddItems(ItemName itemName, uint quantity)
     {
         if (quantity == 0)
             return;
@@ -89,12 +76,20 @@ public class Inventory : MonoBehaviour
         inventory.AddItems(itemName, quantity);
     }
 
-    public void RemoveItem(string itemName)
+	public void AddItems(ItemsDictionary items)
+	{
+		foreach (var item in items)
+		{
+			inventory.AddItems (item.Key, item.Value);
+		}
+	}
+
+	public void RemoveItem(ItemName itemName)
     {
         RemoveItems(itemName, 1);
     }
 
-    public void RemoveItems(string itemName, int quantity)
+	public void RemoveItems(ItemName itemName, int quantity)
     {
         if (quantity <= 0)
             return;
@@ -122,7 +117,7 @@ public class Inventory : MonoBehaviour
         Gold -= (uint)quantity;
     }
 
-    public bool ContainsItem(string itemName)
+	public bool ContainsItem(ItemName itemName)
     {
         if (!inventory.ContainsItem(itemName))
             return false;
@@ -139,8 +134,6 @@ public class Inventory : MonoBehaviour
         RemoveItem(item.Definition.Name);
         buyersInventory.AddItem(item.Definition.Name);
         AddGold(item.Price);
-
-        PrintInventory();
 
         return true;
     }

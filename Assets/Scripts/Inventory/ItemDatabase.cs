@@ -13,7 +13,7 @@ public class ItemDatabase : MonoBehaviour
         items = Items;
     }
 
-    public static ItemDefinition GetItemDefinition(string name)
+	public static ItemDefinition GetItemDefinition(ItemName name)
     {
         for(int i = 0; i < items.Length; i++)
         {

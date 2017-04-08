@@ -224,6 +224,10 @@ public class BoatPhysics : MonoBehaviour
         vel.y = 0f;
         var velocityParam = Mathf.Clamp01(vel.magnitude);
         float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.GetAngle());
+
+		if (Mathf.Abs(rudder.GetAngle()) > 0f && Mathf.Abs(force) < rudder.MinTurningForce)
+			force = rudder.MinTurningForce * Mathf.Sign(rudder.GetAngle());
+
         rigidBody.AddTorque(0f, force, 0f);
     }
 
