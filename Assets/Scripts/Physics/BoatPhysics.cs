@@ -223,6 +223,10 @@ public class BoatPhysics : MonoBehaviour
         var vel = rigidBody.velocity;
         vel.y = 0f;
         var velocityParam = Mathf.Clamp01(vel.magnitude);
+
+        if (velocityParam <= 0f)
+            velocityParam = rudder.MinTurningForce;
+
         float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.GetAngle());
 
 		if (Mathf.Abs(rudder.GetAngle()) > 0f && Mathf.Abs(force) < rudder.MinTurningForce)
@@ -231,16 +235,40 @@ public class BoatPhysics : MonoBehaviour
         rigidBody.AddTorque(0f, force, 0f);
     }
 
+    public float GetAngleOfAttack()
+    {
+        // TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
+        var angleOfAttack = 180f + Utils.Math.AngleSigned(transform.up, GetApparentWindForce(), Vector3.up); // Vector3.Angle (transform.up, apparentWindForce);
+        myLog = "Angle of attack: " + angleOfAttack;
+
+        return angleOfAttack;
+    }
+
+    public float GetAngleOfAttackSigned()
+    {
+        var angleOfAttack = GetAngleOfAttack();
+        
+        if (angleOfAttack > 180f)
+        {
+            angleOfAttack = angleOfAttack - 360f;
+        }
+
+        return angleOfAttack;
+    }
+
+    public Vector3 GetApparentWindForce()
+    {
+        return sails.GetTrueWind() - rigidBody.velocity;
+    }
+
     void ApplySailForces()
     {
         if (sails == null || rigidBody == null || submergedArea <= 0f)
             return;
 
-        Vector3 apparentWindForce = sails.GetTrueWind() - rigidBody.velocity;
+        Vector3 apparentWindForce = GetApparentWindForce();
+        var angleOfAttack = GetAngleOfAttack();
 
-        // TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
-        var angleOfAttack = 180f + Utils.Math.AngleSigned(transform.up, apparentWindForce, Vector3.up); // Vector3.Angle (transform.up, apparentWindForce);
-		myLog = "Angle of attack: " + angleOfAttack;
         Vector3 drag = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
 			sails.GetArea() * sails.GetDragCoefficient(angleOfAttack) * apparentWindForce.normalized;
         Vector3 lift = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *

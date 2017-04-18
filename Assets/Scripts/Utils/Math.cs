@@ -24,4 +24,12 @@ namespace Utils
             return angle;
         }
     }
+
+    public class Random
+    {
+        public static float Sign()
+        {
+            return UnityEngine.Random.value > 0.5f ? 1f : -1f;
+        }
+    }
 }

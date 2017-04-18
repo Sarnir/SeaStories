@@ -3,16 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
+[System.Serializable]
+public enum PointOfSail
+{
+    InIrons,
+    CloseHauled,
+    CloseReach,
+    BeamReach,
+    BroadReach,
+    Running,
+}
+
 public class ShipController : MonoBehaviour
 {
     protected Inventory inventory;
     protected Sails sails;
 	protected Rudder rudder;
+    protected BoatPhysics physics;
 
     void Start()
     {
         sails = GetComponentInChildren<Sails> ();
 		rudder = GetComponentInChildren<Rudder> ();
+        physics = GetComponentInChildren<BoatPhysics>();
     }
 
 	public void SetupInventory(ItemsDictionary startingItems)
