@@ -24,7 +24,7 @@ public class UICompassRose : MonoBehaviour
 
 		Needle.rotation = Quaternion.Euler (0f, 0f, angle);
 
-		angle = Utils.Math.AngleSigned (WeatherController.Instance.GetWindVector (), north, Vector3.up);
+		angle = Utils.Math.AngleSigned (WeatherController.Instance.GetTrueWind (), north, Vector3.up);
 		WindNeedle.rotation = Quaternion.Euler (0f, 0f, angle);
 	}
 }

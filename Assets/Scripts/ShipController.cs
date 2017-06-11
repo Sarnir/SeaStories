@@ -3,17 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 
-[System.Serializable]
-public enum PointOfSail
-{
-    InIrons,
-    CloseHauled,
-    CloseReach,
-    BeamReach,
-    BroadReach,
-    Running,
-}
-
 public class ShipController : MonoBehaviour
 {
     protected Inventory inventory;
@@ -21,7 +10,7 @@ public class ShipController : MonoBehaviour
 	protected Rudder rudder;
     protected BoatPhysics physics;
 
-    void Start()
+    void Awake()
     {
         sails = GetComponentInChildren<Sails> ();
 		rudder = GetComponentInChildren<Rudder> ();
@@ -37,7 +26,7 @@ public class ShipController : MonoBehaviour
 
     protected void StopShip()
     {
-        sails.ReefSails(true);
+        sails.ReefSailsFully();
 		rudder.Reset ();
     }
 

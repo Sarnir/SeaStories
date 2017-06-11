@@ -9,56 +9,109 @@ public struct AngleCoefficient
 	public float Value;
 }
 
+[System.Serializable]
+public enum PointOfSail
+{
+    InIrons,
+    CloseHauled,
+    CloseReach,
+    BeamReach,
+    BroadReach,
+    Running,
+    Length // used to check for number of elements in enum
+}
+
+[System.Serializable]
+public enum RigType
+{
+    ForeAndAft,
+    Square
+}
+
 public class Sails : MonoBehaviour
 {
 	[SerializeField]
 	AngleCoefficient[] dragCoefficient;
 	[SerializeField]
 	AngleCoefficient[] liftCoefficient;
+    [SerializeField]
+    float sailAreaFactor;
 
     Cloth sailCloth;
-
+    
     float sailArea;
 
+    [SerializeField]
+    Vector3 SailCenter;
+
+    [SerializeField]
+    ShipConfig shipConfig;
+
+    public bool IsUsingConfig
+    {
+        get; private set;
+    }
+
 	// Use this for initialization
-	void Start ()
+	void Awake ()
 	{
+        IsUsingConfig = (shipConfig != null);
+
 		sailCloth = GetComponent<Cloth> ();
 	}
 	
     void Update()
     {
-        sailCloth.externalAcceleration = WeatherController.Instance.GetWindVector();
+        sailCloth.externalAcceleration = WeatherController.Instance.GetTrueWind();
     }
 
 	public float GetArea()
     {
-        return sailArea;
+        return sailArea * sailAreaFactor;
     }
 
     public Vector3 GetCenter()
     {
-        return transform.position;
+        return transform.position + SailCenter;
     }
 
-	public void SpreadSails(bool max = false)
+    public void SpreadSailsFully()
+    {
+        sailArea = 1f;
+    }
+
+    public void SpreadSails()
     {
 		sailArea += 0.25f;
 
-		if (sailArea >= 1f || max)
+		if (sailArea > 1f)
         {
             sailArea = 1f;
         }
     }
 
-    public void ReefSails(bool max = false)
+    public void ReefSailsFully()
+    {
+        sailArea = 0f;
+    }
+
+    public void ReefSails()
     {
 		sailArea -= 0.25f;
 
-        if(sailArea <= 0f || max)
+        if(sailArea < 0f)
         {
             sailArea = 0f;
         }
+    }
+
+    public float GetSailForce(float angle)
+    {
+        // angle is supposed to be <0;360> at this point
+        if (angle > 180)
+            angle = 360f - angle;
+        
+        return GetArea() * shipConfig.SailCoefficientCurve.Evaluate(angle / 180f);
     }
 
 	public float GetDragCoefficient(float angle)
@@ -81,6 +134,9 @@ public class Sails : MonoBehaviour
         // angle is supposed to be <0;360> at this point
         if (angle > 180)
             angle = 360f - angle;
+
+        if (angle < coefficient[0].Angle)
+            return coefficient[0].Value;
 
         AngleCoefficient last;
 		AngleCoefficient current = coefficient[1];

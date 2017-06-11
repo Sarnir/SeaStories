@@ -16,7 +16,7 @@ public class WeatherController : MonoBehaviour
     {
     }
 
-    public Vector3 GetWindVector()
+    public Vector3 GetTrueWind()
     {
         return CurrentWind;
     }

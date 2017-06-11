@@ -7,7 +7,6 @@ public class Rudder : MonoBehaviour
     public float RudderCoefficient;
     public float TurningSpeed;
     public float MaxAngle;
-	public float MinTurningForce;
 
 	Quaternion originRotation;
 

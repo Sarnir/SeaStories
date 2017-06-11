@@ -216,6 +216,8 @@ public class BoatPhysics : MonoBehaviour
         ApplyRudderForces();
         ApplySailForces ();
         ApplyWaterResistance ();
+
+        myLog = "Velocity: " + rigidBody.velocity.magnitude;
     }
 
     void ApplyRudderForces()
@@ -224,14 +226,10 @@ public class BoatPhysics : MonoBehaviour
         vel.y = 0f;
         var velocityParam = Mathf.Clamp01(vel.magnitude);
 
-        if (velocityParam <= 0f)
-            velocityParam = rudder.MinTurningForce;
-
+        //Debug.Log("Velocity param = " + velocityParam);
+        
         float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.GetAngle());
-
-		if (Mathf.Abs(rudder.GetAngle()) > 0f && Mathf.Abs(force) < rudder.MinTurningForce)
-			force = rudder.MinTurningForce * Mathf.Sign(rudder.GetAngle());
-
+        
         rigidBody.AddTorque(0f, force, 0f);
     }
 
@@ -239,7 +237,7 @@ public class BoatPhysics : MonoBehaviour
     {
         // TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
         var angleOfAttack = 180f + Utils.Math.AngleSigned(transform.up, GetApparentWindForce(), Vector3.up); // Vector3.Angle (transform.up, apparentWindForce);
-        myLog = "Angle of attack: " + angleOfAttack;
+        //myLog = "Angle of attack: " + angleOfAttack;
 
         return angleOfAttack;
     }
@@ -258,7 +256,7 @@ public class BoatPhysics : MonoBehaviour
 
     public Vector3 GetApparentWindForce()
     {
-        return sails.GetTrueWind() - rigidBody.velocity;
+        return WeatherController.Instance.GetTrueWind() - rigidBody.velocity;
     }
 
     void ApplySailForces()
@@ -269,41 +267,59 @@ public class BoatPhysics : MonoBehaviour
         Vector3 apparentWindForce = GetApparentWindForce();
         var angleOfAttack = GetAngleOfAttack();
 
-        Vector3 drag = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
-			sails.GetArea() * sails.GetDragCoefficient(angleOfAttack) * apparentWindForce.normalized;
-        Vector3 lift = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
-			sails.GetArea() * sails.GetLiftCoefficient(angleOfAttack) *
-            Vector3.Cross(Vector3.up, apparentWindForce.normalized);
-        
-        float sign = 1f;
-        if(angleOfAttack > 180f)
+        if (sails.IsUsingConfig)
         {
-            angleOfAttack = 180f - angleOfAttack;
-            sign = -1f;
+            if (angleOfAttack > 180f)
+            {
+                angleOfAttack = angleOfAttack + (180f - angleOfAttack);
+            }
+
+            var forwardForce = apparentWindForce.magnitude * sails.GetSailForce(angleOfAttack) * transform.up;
+
+            rigidBody.AddForceAtPosition(forwardForce, submergedCenter);
         }
-        var forwardForce = (lift.magnitude * Mathf.Sin(Mathf.Deg2Rad * angleOfAttack) -
-            drag.magnitude * Mathf.Cos(Mathf.Deg2Rad * angleOfAttack)) * transform.up * sign;
+        else
+        {
+            float sign = 1f;
+            if (angleOfAttack > 180f)
+            {
+                angleOfAttack = 180f - angleOfAttack;
+                sign = -1f;
+            }
 
-        var lateralForce = (lift.magnitude * Mathf.Cos(Mathf.Deg2Rad * angleOfAttack) +
-            drag.magnitude * Mathf.Sin(Mathf.Deg2Rad * angleOfAttack)) *
-            -Vector3.Cross(Vector3.up, forwardForce.normalized);
+            Vector3 drag = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
+            sails.GetArea() * sails.GetDragCoefficient(angleOfAttack) * apparentWindForce.normalized;
+            Vector3 lift = 0.5f * rho * Vector3.SqrMagnitude(apparentWindForce) *
+                sails.GetArea() * sails.GetLiftCoefficient(angleOfAttack) *
+                Vector3.Cross(Vector3.up, apparentWindForce.normalized);
+            
+            var forwardForce = (lift.magnitude * Mathf.Sin(Mathf.Deg2Rad * angleOfAttack) -
+                drag.magnitude * Mathf.Cos(Mathf.Deg2Rad * angleOfAttack)) * transform.up * sign;
 
-        //Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
-        Debug.DrawRay(transform.position, apparentWindForce * 5f, Color.yellow);
-        Debug.DrawRay(transform.position, drag * 5f, Color.red);
-        Debug.DrawRay(transform.position, lift * 5f, Color.green);
-        Debug.DrawRay(transform.position, lateralForce * 5f, Color.blue);
-        Debug.DrawRay(transform.position, forwardForce * 5f, Color.black);
-        rigidBody.AddForceAtPosition(forwardForce, submergedCenter);
-        rigidBody.AddForceAtPosition(lateralForce, new Vector3(submergedCenter.x, sails.GetCenter().y, submergedCenter.z));
-        rigidBody.AddForceAtPosition(-lateralForce, submergedCenter);
+            var lateralForce = (lift.magnitude * Mathf.Cos(Mathf.Deg2Rad * angleOfAttack) +
+                drag.magnitude * Mathf.Sin(Mathf.Deg2Rad * angleOfAttack)) *
+                -Vector3.Cross(Vector3.up, forwardForce.normalized);
+
+            // hack for getting forward force less than 0 (when facing the wind)
+            if (Vector3.Dot(forwardForce.normalized, transform.up.normalized) < 0)
+                forwardForce = Vector3.zero;
+            
+            Debug.DrawRay(transform.position, apparentWindForce * 5f, Color.yellow);
+            Debug.DrawRay(transform.position, drag * 5f, Color.red);
+            Debug.DrawRay(transform.position, lift * 5f, Color.green);
+            Debug.DrawRay(transform.position, lateralForce * 5f, Color.blue);
+            Debug.DrawRay(transform.position, forwardForce * 5f, Color.black);
+            rigidBody.AddForceAtPosition(forwardForce, submergedCenter);
+            rigidBody.AddForceAtPosition(lateralForce, new Vector3(submergedCenter.x, sails.GetCenter().y, submergedCenter.z));
+            rigidBody.AddForceAtPosition(-lateralForce, submergedCenter);
+        }
+        Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
     }
 
 	string myLog;
 
 	void OnGUI ()
 	{
-        return;
         if (!string.IsNullOrEmpty(myLog))
         {
             var style = new GUIStyle();

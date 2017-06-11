@@ -2,47 +2,96 @@
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using System;
 
 public class AIShipController : ShipController
 {
 	public Vector3 destination;
-    bool isDestinationUpwind;
 
     // angle between ship and target on wind axis 
     // at which the ship will come about while tacking
-    public float ComeAboutAngle = 30f;
-
     // TODO: this should be dependent on ship type
-    public float MaxDeadAngle = 30f;
+    public float ComeAboutAngle = 20f;
+
+    // what is the highest angle still considered dead for this vessel?
+    // TODO: this should be dependent on ship type
+    public float MaxDeadAngle = 25f;
+
+    // how close does it needs to be to assume destination is met
+    public float destinationPrecision = 1f;
 
     float desiredAngle;
+    bool readyToComeAbout;
 
-    public void SailTo(Vector3 pos)
-	{
-		// keep close to desired angle
-		// desired angles are based on ship specs
-
-		sails.SpreadSails (true);
-		destination = pos;
-        isDestinationUpwind = true;
-	}
-
-    void Awake()
+    Vector3 distanceToDestination
     {
-        isDestinationUpwind = true;
-        StartTacking();
+        get { return transform.position - destination; }
     }
 
-	void Update()
+    float angleToTarget
+    {
+        get { return Utils.Math.AngleSigned(WeatherController.Instance.GetTrueWind(), transform.position - destination, Vector3.up); }
+    }
+
+    float angleOfAttack
+    {
+        get { return physics.GetAngleOfAttackSigned(); }
+    }
+
+    bool isInDeadZone
+    {
+        get { return Mathf.Abs(angleOfAttack) <= MaxDeadAngle; }
+    }
+
+    enum SailingStrategy
+    {
+        Anchor,
+        SailStraight,
+        Tack
+    }
+
+    SailingStrategy currentSailStrategy;
+
+    public void SetSail(Vector3 pos)
 	{
-		sails.SpreadSails (true);
-		if (destination != transform.position)
-		{
-            if (isDestinationUpwind)
-                Tack();
-            else
-                SailDirectly();
-		}
+		sails.SpreadSailsFully ();
+		destination = pos;
+        currentSailStrategy = SailingStrategy.SailStraight;
+    }
+    
+    void Start()
+    {
+        SetSail(destination);
+    }
+
+    void Update()
+    {
+        if(currentSailStrategy != SailingStrategy.Tack && isInDeadZone)
+        {
+            Debug.Log("Starting tacking!");
+            currentSailStrategy = SailingStrategy.Tack;
+            desiredAngle = MaxDeadAngle + UnityEngine.Random.Range(10f, 20f);
+            readyToComeAbout = true;
+        }
+
+        if(currentSailStrategy == SailingStrategy.Tack)
+        {
+            if (readyToComeAbout && Mathf.Abs(angleToTarget - (ComeAboutAngle * Mathf.Sign(desiredAngle))) < 1f)
+            {
+                readyToComeAbout = false;
+                desiredAngle *= -1;
+            }
+
+            if (!readyToComeAbout && (angleOfAttack - desiredAngle) < 1f)
+                readyToComeAbout = true;
+
+            SailAtAngleToWind(desiredAngle);
+        }
+        else if(currentSailStrategy == SailingStrategy.SailStraight)
+        {
+            desiredAngle = 0f;
+            SailDirectly(destination);
+        }
 	}
 
     void StartTacking()
@@ -53,9 +102,6 @@ public class AIShipController : ShipController
 
     void Tack()
     {
-        var angleOfAttack = physics.GetAngleOfAttackSigned();
-        var angleToTarget = Utils.Math.AngleSigned(sails.GetTrueWind(), transform.position - destination, Vector3.up);
-
         Debug.Log("Angle of attack =  " + angleOfAttack + ", angle to target = " + angleToTarget);
 
         if (angleOfAttack < desiredAngle)
@@ -71,18 +117,35 @@ public class AIShipController : ShipController
         }
     }
 
-    void SailDirectly()
+    void SailDirectly(Vector3 target)
     {
-        // rotate towards target
-        // should be transform.forward here...
-        var angle = Utils.Math.AngleSigned(transform.up, destination - transform.position, Vector3.up);
-        if (angle > 1f)
+        SailAtAngleToTarget(0f, target);
+    }
+
+    void SailAtAngleToWind(float targetAngle)
+    {
+        var angle = Utils.Math.AngleSigned(transform.up, WeatherController.Instance.GetTrueWind(), Vector3.up);
+        angle = angle - (180f * Mathf.Sign(angle));
+
+        Debug.Log("Angle to wind = " + angle);
+
+        if (targetAngle - angle < -5f)
             rudder.SteerRight();
-        else if (angle < -1f)
+        else if (targetAngle - angle > 5f)
             rudder.SteerLeft();
     }
 
-	void OnDrawGizmos()
+    void SailAtAngleToTarget(float targetAngle, Vector3 targetPos)
+    {
+        var angle = Utils.Math.AngleSigned(transform.up, targetPos - transform.position, Vector3.up);
+        
+        if (targetAngle - angle < -2f)
+            rudder.SteerRight();
+        else if (targetAngle - angle > 2f)
+            rudder.SteerLeft();
+    }
+
+    void OnDrawGizmos()
 	{
 		Gizmos.DrawLine (transform.position, destination);
     }

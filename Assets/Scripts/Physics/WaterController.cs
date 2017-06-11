@@ -30,7 +30,7 @@ public class WaterController : MonoBehaviour
 
     void Update()
     {
-        currentWind = WeatherController.Instance.GetWindVector();
+        currentWind = WeatherController.Instance.GetTrueWind();
         UpdateWater();
     }
 
