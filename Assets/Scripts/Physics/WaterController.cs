@@ -6,7 +6,8 @@ using UnityEngine;
 [RequireComponent(typeof(MeshRenderer))]
 public class WaterController : MonoBehaviour
 {
-    MeshFilter meshFilter;
+    public Camera camera;
+
     public int Width;
     public int Length;
 
@@ -16,8 +17,11 @@ public class WaterController : MonoBehaviour
 
     public static WaterController Instance;
 
+    MeshFilter meshFilter;
     Mesh lastMesh;
     Vector3 currentWind;
+
+    Vector3 offsetPosition;
 
     void Start ()
     {
@@ -26,12 +30,35 @@ public class WaterController : MonoBehaviour
 
         // create mesh for water
         CreateMesh();
+
+        OnCameraForwardChanged();
 	}
 
     void Update()
     {
         currentWind = WeatherController.Instance.GetTrueWind();
         UpdateWater();
+
+        Vector3 cameraPos = camera.transform.position;
+        cameraPos.y = 0f;
+        transform.position = cameraPos + offsetPosition;
+    }
+
+    void OnCameraForwardChanged()
+    {
+        if (camera == null)
+            camera = Camera.main;
+
+        float distance = 0f;
+        Plane plane = new Plane(Vector3.up, Vector3.zero);
+        Ray ray = new Ray(camera.transform.position, camera.transform.forward);
+
+        plane.Raycast(ray, out distance);
+        
+        offsetPosition = ray.GetPoint(distance) - camera.transform.position;
+        offsetPosition.x -= Width * 0.5f;
+        offsetPosition.y = 0f;
+        offsetPosition.z -= Length * 0.5f;
     }
 
     void UpdateWater()
@@ -43,7 +70,7 @@ public class WaterController : MonoBehaviour
         {
             for (int x = 0; x < Width; x++)
             {
-                float y = GetWaterYPos(new Vector3(x, 0f, z));
+                float y = GetWaterYPos(new Vector3(x, 0f, z) + transform.position);
                 verts[currentVertex] = new Vector3(x, y, z);
                 currentVertex++;
             }

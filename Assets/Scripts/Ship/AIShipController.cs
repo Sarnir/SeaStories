@@ -7,7 +7,6 @@ using System;
 public class AIShipController : ShipController
 {
 	public Vector3 destination;
-	public Vector3 destinationAcc;
 
     // angle between ship and target on wind axis 
     // at which the ship will come about while tacking
@@ -48,11 +47,22 @@ public class AIShipController : ShipController
     {
         Anchor,
         SailStraight,
-        Tack,
-		AttackTarget
+        SailAtAngle,
+        Tack
+    }
+
+    public enum AIState
+    {
+        Idle,
+        Follow,
+        Attack
     }
 
     SailingStrategy currentSailStrategy;
+
+    public AIState currentState;
+
+    public float FiringRange;
 
     public void SetSail(Vector3 pos)
 	{
@@ -60,12 +70,6 @@ public class AIShipController : ShipController
 		destination = pos;
         currentSailStrategy = SailingStrategy.SailStraight;
     }
-
-	public void Attack()
-	{
-		sails.SpreadSailsFully ();
-		currentSailStrategy = SailingStrategy.AttackTarget;
-	}
     
     void Start()
     {
@@ -74,10 +78,18 @@ public class AIShipController : ShipController
 
     void Update()
     {
-		// testing fleeing target
-		destination += destinationAcc;
+        if (currentState == AIState.Attack)
+        {
+            desiredAngle = 90f;
+            currentSailStrategy = SailingStrategy.SailAtAngle;
+        }
 
-        if(currentSailStrategy != SailingStrategy.Tack && isInDeadZone)
+        UpdateStrategy();
+	}
+
+    void UpdateStrategy()
+    {
+        if (currentSailStrategy != SailingStrategy.Tack && isInDeadZone)
         {
             Debug.Log("Starting tacking!");
             currentSailStrategy = SailingStrategy.Tack;
@@ -85,7 +97,7 @@ public class AIShipController : ShipController
             readyToComeAbout = true;
         }
 
-        if(currentSailStrategy == SailingStrategy.Tack)
+        if (currentSailStrategy == SailingStrategy.Tack)
         {
             if (readyToComeAbout && Mathf.Abs(angleToTarget - (ComeAboutAngle * Mathf.Sign(desiredAngle))) < 1f)
             {
@@ -98,38 +110,20 @@ public class AIShipController : ShipController
 
             SailAtAngleToWind(desiredAngle);
         }
-        else if(currentSailStrategy == SailingStrategy.SailStraight)
+        else if (currentSailStrategy == SailingStrategy.SailStraight)
         {
             desiredAngle = 0f;
             SailDirectly(destination);
         }
-		else if(currentSailStrategy == SailingStrategy.AttackTarget)
-		{
-			SailAtAngleToTarget (90f, destination);
-		}
-			
-	}
-
-    void StartTacking()
-    {
-        desiredAngle = Utils.Random.Sign() * MaxDeadAngle;
-        Debug.Log("Desired angle = " + desiredAngle);
-    }
-
-    void Tack()
-    {
-        Debug.Log("Angle of attack =  " + angleOfAttack + ", angle to target = " + angleToTarget);
-
-        if (angleOfAttack < desiredAngle)
-            rudder.SteerLeft();
-        else if (angleOfAttack > desiredAngle)
-            rudder.SteerRight();
-
-        if (Mathf.Abs(angleToTarget) > ComeAboutAngle && Mathf.Sign(angleOfAttack) == Mathf.Sign(desiredAngle))
+        else if(currentSailStrategy == SailingStrategy.SailAtAngle)
         {
-            // come about!
-            desiredAngle = -desiredAngle;
-            Debug.Log("Desired angle = " + desiredAngle);
+            if (distanceToDestination.magnitude > FiringRange)
+                SailDirectly(destination);
+            else
+            {
+                Debug.Log("In Firing Range!");
+                SailAtAngleToTarget(desiredAngle, destination);
+            }
         }
     }
 
@@ -145,9 +139,9 @@ public class AIShipController : ShipController
 
         Debug.Log("Angle to wind = " + angle);
 
-        if (targetAngle - angle < -2f)
+        if (targetAngle - angle < -5f)
             rudder.SteerRight();
-        else if (targetAngle - angle > 2f)
+        else if (targetAngle - angle > 5f)
             rudder.SteerLeft();
     }
 
@@ -155,9 +149,9 @@ public class AIShipController : ShipController
     {
         var angle = Utils.Math.AngleSigned(transform.up, targetPos - transform.position, Vector3.up);
         
-        if (targetAngle - angle < -5f)
+        if (targetAngle - angle < -2f)
             rudder.SteerRight();
-        else if (targetAngle - angle > 5f)
+        else if (targetAngle - angle > 2f)
             rudder.SteerLeft();
     }
 
