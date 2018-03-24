@@ -11,11 +11,13 @@ public class GameController : MonoBehaviour {
     public float ScrollFactor;
     public float PanSensitivity;
     public UIController UIController;
+	public Transform Crossmark;
 
     Camera mainCamera;
     Vector3 mouseOrigin;
     bool isCameraPanning;
-    bool isLMBDown;
+    bool isRMBDown;
+	bool isLeftClickCanceled;
 
     // Use this for initialization
     void Start () {
@@ -34,13 +36,41 @@ public class GameController : MonoBehaviour {
         if (UIController.ShopWindow.IsOpened())
             return;
 
-        if (Input.GetMouseButtonDown(0))
+		if (Input.GetMouseButtonDown(0))
+		{
+			mouseOrigin = Input.mousePosition;
+			isLeftClickCanceled = false;
+		}
+		
+		if(Input.GetMouseButton(0))
+		{
+			var mouseDeltaPos = (mouseOrigin - Input.mousePosition);
+
+			if (mouseDeltaPos.magnitude > 7f)
+					isLeftClickCanceled = true;
+		}
+		
+		if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
+		{
+			if(!isLeftClickCanceled)
+			{
+				RaycastHit hit;
+				
+				if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100)) {
+					Crossmark.transform.position = hit.point;
+					Crossmark.gameObject.SetActive (true);
+					ActivePlayer.SetDestination(hit.point);
+				}
+			}
+		}
+
+		if (Input.GetMouseButtonDown(1))
         {
             mouseOrigin = Input.mousePosition;
-            isLMBDown = true;
+            isRMBDown = true;
         }
 
-        if(Input.GetMouseButton(0))
+        if(Input.GetMouseButton(1))
         {
             var mouseDeltaPos = (mouseOrigin - Input.mousePosition);
 
@@ -57,10 +87,10 @@ public class GameController : MonoBehaviour {
             }
         }
 
-        if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
+        if (Input.GetMouseButtonUp(1) && !EventSystem.current.IsPointerOverGameObject())
         {
             isCameraPanning = false;
-            isLMBDown = false;
+            isRMBDown = false;
         }
 
         HandleScrollWheel(Input.GetAxis("Mouse ScrollWheel"));
