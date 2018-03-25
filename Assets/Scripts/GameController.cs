@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 public class GameController : MonoBehaviour {
 
-    public PlayerController ActivePlayer;
+    public PlayerController Player;
     public float ScrollFactor;
     public float PanSensitivity;
     public UIController UIController;
@@ -18,6 +18,15 @@ public class GameController : MonoBehaviour {
     bool isCameraPanning;
     bool isRMBDown;
 	bool isLeftClickCanceled;
+
+    static GameController _instance;
+    public static GameController GetInstance()
+    {
+        if (_instance == null)
+            _instance = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+
+        return _instance;
+    }
 
     // Use this for initialization
     void Start () {
@@ -57,9 +66,10 @@ public class GameController : MonoBehaviour {
 				RaycastHit hit;
 				
 				if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100)) {
-					Crossmark.transform.position = hit.point;
-					Crossmark.gameObject.SetActive (true);
-					ActivePlayer.SetDestination(hit.point);
+                    if (hit.transform.gameObject.tag == "Pickup")
+                        Player.TakePickup(hit.transform.GetComponent<Pickup>());
+                    else
+                        Player.SetDestination(hit.point);
 				}
 			}
 		}
@@ -109,18 +119,29 @@ public class GameController : MonoBehaviour {
 
     public void OpenShop(City city)
     {
-		UIController.ShopWindow.OpenShop(ActivePlayer.GetInventory(), city);
+		UIController.ShopWindow.OpenShop(Player.GetInventory(), city);
+    }
+
+    public void SetCrossmark(Vector3 point)
+    {
+        EnableCrossmark(true);
+        Crossmark.transform.position = point;
+    }
+
+    public void EnableCrossmark(bool enable)
+    {
+        Crossmark.gameObject.SetActive(enable);
     }
 
     public void CloseShop()
     {
         UIController.ShopWindow.Close();
-        ActivePlayer.LeaveCity();
+        Player.LeaveCity();
     }
 
     public void ToggleInventory()
     {
-		UIController.InventoryWindow.ToggleInventory(ActivePlayer.GetInventory());
-        ActivePlayer.IsConsumingFood = !ActivePlayer.IsConsumingFood;
+		UIController.InventoryWindow.ToggleInventory(Player.GetInventory());
+        Player.IsConsumingFood = !Player.IsConsumingFood;
     }
 }

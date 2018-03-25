@@ -10,7 +10,7 @@ public class Rudder : MonoBehaviour
 
 	Quaternion originRotation;
 
-    float Angle
+    public float Angle
     {
         get
         {
@@ -19,18 +19,13 @@ public class Rudder : MonoBehaviour
                 angle -= 360f;
             return angle;
         }
-        set
+        private set
         {
             transform.localRotation = Quaternion.Euler(
                 transform.localRotation.eulerAngles.x,
                 transform.localRotation.eulerAngles.y,
                 value); 
         }
-    }
-
-    public float GetAngle()
-    {
-        return Angle;
     }
 
     public void SteerLeft()

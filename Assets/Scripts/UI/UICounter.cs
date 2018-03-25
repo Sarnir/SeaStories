@@ -12,12 +12,12 @@ public class UICounter : MonoBehaviour
     {
         counterImage = GetComponent<Image>();
         label = GetComponentInChildren<Text>();
-        gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+        gameController = GameController.GetInstance();
     }
 	
 	void Update ()
     {
-        float food = gameController.ActivePlayer.GetCurrentFood();
+        float food = gameController.Player.GetCurrentFood();
         int foodInt = Mathf.FloorToInt(food);
 
         //if (foodInt > 0)

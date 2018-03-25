@@ -5,6 +5,8 @@ using DG.Tweening;
 
 public class ShipController : MonoBehaviour
 {
+    public ShipConfig shipConfig;
+
     protected Inventory inventory;
     protected Sails sails;
 	protected Rudder rudder;
@@ -38,22 +40,46 @@ public class ShipController : MonoBehaviour
 
 	protected void Sail ()
 	{
-		if (Vector3.Distance (destination, transform.position) > 1f)
-		{
-			rudder.SteerLeft ();
+        if (Vector3.Distance(destination, transform.position) > 1f)
+        {
+            var angle = Utils.Math.AngleSigned(transform.up, transform.position - destination);
 
-			// calculate force pushing the boat
-			// it should depend on the wind and boat params
-			var forwardForce = (5f - rigidBody.velocity.magnitude) * transform.up;
-			forwardForce.y = 0f;
+            if (angle < 5f && angle > -5f && (rudder.Angle > 20f || rudder.Angle < -20f))
+                ;// don't turn anymore, let it gooooooo
+            else if (angle < -1f)
+                rudder.SteerRight();
+            else if (angle > 1f)
+                rudder.SteerLeft();
 
-			rigidBody.AddForce (forwardForce);
-		}
+            // calculate force pushing the boat
+            // it should depend on the wind and boat params
+            var forwardForce = (10f - rigidBody.velocity.magnitude)
+                * transform.up * shipConfig.GetSailForce(GetAngleOfAttack());
+            forwardForce.y = 0f;
+
+            rigidBody.AddForce(forwardForce);
+            Debug.Log("velocity: " + rigidBody.velocity.magnitude);
+        }
+        else
+            DestinationReached();
 	}
 
+    public float GetAngleOfAttack()
+    {
+        // TODO: ogarnąć, żeby używać tutaj poprawnego wektora kierunku :D
+        var angleOfAttack = 180f + Utils.Math.AngleSigned(transform.up, GetApparentWindForce(), Vector3.up); // Vector3.Angle (transform.up, apparentWindForce);
+        //myLog = "Angle of attack: " + angleOfAttack;
 
-	// copied from BoatPhysics
-	void ApplyRudderForces()
+        return angleOfAttack;
+    }
+
+    public Vector3 GetApparentWindForce()
+    {
+        return WeatherController.Instance.GetTrueWind() - rigidBody.velocity;
+    }
+
+    // copied from BoatPhysics
+    void ApplyRudderForces()
 	{
 		var vel = rigidBody.velocity;
 		vel.y = 0f;
@@ -61,7 +87,7 @@ public class ShipController : MonoBehaviour
 
 		//Debug.Log("Velocity param = " + velocityParam);
 
-		float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.GetAngle());
+		float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.Angle);
 
 		rigidBody.AddTorque(0f, force, 0f);
 	}
@@ -72,10 +98,15 @@ public class ShipController : MonoBehaviour
 		rudder.Reset ();
     }
 
-	public void SetDestination (Vector3 _destination)
+	public virtual void SetDestination (Vector3 _destination)
 	{
 		destination = _destination;
 	}
+
+    protected virtual void DestinationReached()
+    {
+        destination = transform.position;
+    }
 
 	public Inventory GetInventory()
 	{

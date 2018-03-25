@@ -10,6 +10,12 @@ public struct ItemsQuantities
 	public uint quantity;
 }
 
+public enum PlayerShipOrder
+{
+    SailToPoint,
+    SailToPickup
+}
+
 public class PlayerController : ShipController
 {
     public bool LogsEnabled;
@@ -20,11 +26,13 @@ public class PlayerController : ShipController
 
     float currentFoodUnitLeft;
 
+    PlayerShipOrder currentOrder;
+
     void Start()
     {
         IsConsumingFood = true;
 
-		gameController = GameObject.FindWithTag("GameController").GetComponent<GameController>();
+        gameController = GameController.GetInstance();
 		sails = GetComponentInChildren<Sails> ();
 		rudder = GetComponentInChildren<Rudder> ();
 
@@ -53,14 +61,45 @@ public class PlayerController : ShipController
             EnterCity(city);
     }*/
 
-    public void EnterCity(City city)
+    public void TakePickup(Pickup pickup)
+    {
+        float maxPickupDistance = 5f;
+
+        if ((pickup.transform.position - transform.position).magnitude < maxPickupDistance)
+        {
+            // dodaj zawartość do ekwipunku
+            // wyświetl info o tym co wpada
+            // kasuj skrzynkę
+            Debug.Log("Pickup picked up xd");
+            Destroy(pickup.gameObject);
+        }
+        else
+        {
+            SetDestination(pickup.transform.position); //sail to iiiit
+        }
+    }
+
+    protected override void DestinationReached()
+    {
+        base.DestinationReached();
+        gameController.EnableCrossmark(false);
+    }
+
+    public override void SetDestination(Vector3 _destination)
+    {
+        base.SetDestination(_destination);
+
+        gameController.SetCrossmark(_destination);
+    }
+
+    public override void EnterCity(City city)
     {
         StopShip();
         IsConsumingFood = false;
         gameController.OpenShop(city);
     }
 
-    public void LeaveCity()
+    public override void LeaveCity()
     {
         IsConsumingFood = true;
         transform.Rotate(0f, 0f, 180f);

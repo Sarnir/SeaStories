@@ -228,7 +228,7 @@ public class BoatPhysics : MonoBehaviour
 
         //Debug.Log("Velocity param = " + velocityParam);
         
-        float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.GetAngle());
+        float force = velocityParam * rudder.RudderCoefficient * Mathf.Sin(Mathf.Deg2Rad * -rudder.Angle);
         
         rigidBody.AddTorque(0f, force, 0f);
     }

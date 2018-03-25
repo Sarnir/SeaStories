@@ -18,6 +18,15 @@ public class ShipConfig : ScriptableObject
     public RigType RigType;
     //public ShipConfigData[] PointsOfSail = new ShipConfigData[(int)PointOfSail.Length];
     public AnimationCurve SailCoefficientCurve;
+
+    public float GetSailForce(float angleToWind)
+    {
+        // angle is supposed to be <0;360> at this point
+        if (angleToWind > 180)
+            angleToWind = 360f - angleToWind;
+
+        return SailCoefficientCurve.Evaluate(angleToWind / 180f);
+    }
 }
 
 
