@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using DG.Tweening;
+
 public class Pickup : MonoBehaviour {
 
     GameController gameController;
 
     MeshRenderer meshRenderer;
     int emissionId;
+
+	Color highlightColor = new Color (0.3f, 0.3f, 0.18f);
 
 	// Use this for initialization
 	void Start ()
@@ -23,16 +27,16 @@ public class Pickup : MonoBehaviour {
 		
 	}
 
-    private void OnMouseEnter()
+    public void OnCursorEnter()
     {
         Debug.Log("Pickup hovered on!");
-        meshRenderer.material.SetColor(emissionId, Color.gray);
+		meshRenderer.material.DOColor (highlightColor, "_EmissionColor", 0.2f);
         //gameController.Player.SetDestination(transform.position);
     }
 
-    private void OnMouseExit()
+    public void OnCursorExit()
     {
-        meshRenderer.material.SetColor(emissionId, Color.black);
+		meshRenderer.material.DOColor (Color.black, "_EmissionColor", 0.2f);
     }
 
     void OnTriggerEnter(Collider other)

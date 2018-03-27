@@ -12,7 +12,7 @@ public class UICounter : MonoBehaviour
     {
         counterImage = GetComponent<Image>();
         label = GetComponentInChildren<Text>();
-        gameController = GameController.GetInstance();
+		gameController = GameController.Instance;
     }
 	
 	void Update ()

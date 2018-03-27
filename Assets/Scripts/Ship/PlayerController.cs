@@ -32,7 +32,7 @@ public class PlayerController : ShipController
     {
         IsConsumingFood = true;
 
-        gameController = GameController.GetInstance();
+		gameController = GameController.Instance;
 		sails = GetComponentInChildren<Sails> ();
 		rudder = GetComponentInChildren<Rudder> ();
 
