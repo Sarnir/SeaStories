@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
-public class ItemsDictionary : Dictionary<ItemName, uint> {}
 
+[System.Obsolete()]
 public class ItemsCollection
 {
 	ItemsDictionary dictionary;
@@ -25,6 +24,11 @@ public class ItemsCollection
             return dictionary[name];
         else
             return 0;
+    }
+
+    public void Clear()
+    {
+        dictionary.Clear();
     }
 
 	public bool ContainsItem(ItemName name)
@@ -83,7 +87,9 @@ public class ItemsCollection
         {
             var currentQuantity = dictionary[name];
 
-            if (currentQuantity <= quantity)
+            // we have an exception for gold -
+            // even if its zero don't remove it from the collection
+            if (currentQuantity <= quantity && name != ItemName.Gold)
                 dictionary.Remove(name);
             else
                 dictionary[name] -= quantity;

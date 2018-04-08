@@ -33,6 +33,7 @@ public class ShipWeapons : MonoBehaviour
             Cannons[i].Fire(Random.value);
         }
 
-        currentCooldown = ReloadCooldown;
+        // cooldowns will be handled from actions
+        currentCooldown = 0f;// ReloadCooldown;
     }
 }

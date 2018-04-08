@@ -11,18 +11,29 @@ public class ShipController : MonoBehaviour
     protected Sails sails;
 	protected Rudder rudder;
     protected BoatPhysics physics;
+    protected ShipWeapons weapons;
 
 	protected Vector3 destination;
 	protected Rigidbody rigidBody;
 
+    // trzymać jakąś listę modifierów?
+    private List<Action> activeEffects;
+
+    public float speedModifier;
+
     void Awake()
     {
+        activeEffects = new List<Action>();
+
         sails = GetComponentInChildren<Sails> ();
 		rudder = GetComponentInChildren<Rudder> ();
         physics = GetComponentInChildren<BoatPhysics>();
 		rigidBody = GetComponent<Rigidbody> ();
+        weapons = GetComponentInChildren<ShipWeapons>();
 
 		destination = transform.position;
+
+        speedModifier = 1f;
     }
 
 	void FixedUpdate()
@@ -31,11 +42,21 @@ public class ShipController : MonoBehaviour
 		Sail ();
 	}
 
-	public void SetupInventory(ItemsDictionary startingItems)
+    public void AddActiveEffect(Action effect)
+    {
+        // czy można dodawać dwa razy ten sam efekt?
+        activeEffects.Add(effect);
+    }
+
+    public ShipWeapons GetWeapons()
+    {
+        return weapons;
+    }
+
+	public void SetupInventory(int _maxSpace, ItemsDictionary startingItems)
 	{
 		inventory = new Inventory ();
-		inventory.Setup();
-		inventory.AddItems (startingItems);
+		inventory.Setup(_maxSpace, startingItems);
 	}
 
 	protected void Sail ()
@@ -53,12 +74,12 @@ public class ShipController : MonoBehaviour
 
             // calculate force pushing the boat
             // it should depend on the wind and boat params
-            var forwardForce = (10f - rigidBody.velocity.magnitude)
+            var forwardForce = (10f - rigidBody.velocity.magnitude) * speedModifier
                 * transform.up * shipConfig.GetSailForce(GetAngleOfAttack());
             forwardForce.y = 0f;
 
             rigidBody.AddForce(forwardForce);
-            Debug.Log("velocity: " + rigidBody.velocity.magnitude);
+            //Debug.Log("velocity: " + rigidBody.velocity.magnitude);
         }
         else
             DestinationReached();

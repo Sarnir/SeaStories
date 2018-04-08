@@ -26,9 +26,11 @@ public class GameController : MonoBehaviour {
 		UIController.ShopWindow.OpenShop(Player.GetInventory(), city);
     }
 
+    // lepiej zrób na evencie?
     public void SetCrossmark(Vector3 point)
     {
         EnableCrossmark(true);
+        point = new Vector3(point.x, 0f, point.z);
         Crossmark.transform.position = point;
     }
 

@@ -41,7 +41,14 @@ public class InputController : MonoBehaviour
 		if (UIController.ShopWindow.IsOpened())
 			return;
 
-		var hits = Physics.RaycastAll (Camera.main.ScreenPointToRay (Input.mousePosition),
+        if(EventSystem.current.IsPointerOverGameObject())
+        {
+            HandleHoverOn(new RaycastHit[0]);
+            return;
+        }
+
+
+        var hits = Physics.RaycastAll (Camera.main.ScreenPointToRay (Input.mousePosition),
 			100);
 
 		HandleHoverOn (hits);
@@ -64,14 +71,7 @@ public class InputController : MonoBehaviour
 		{
 			if(!isLeftClickCanceled)
 			{
-				RaycastHit hit;
-
-				if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, 100)) {
-					if (hit.transform.gameObject.tag == "Pickup")
-						player.TakePickup(hit.transform.GetComponent<Pickup>());
-					else
-						player.SetDestination(hit.point);
-				}
+                HandleLeftClick(hits);
 			}
 		}
 
@@ -106,6 +106,22 @@ public class InputController : MonoBehaviour
 
 		HandleScrollWheel(Input.GetAxis("Mouse ScrollWheel"));
 	}
+
+    private void HandleLeftClick(RaycastHit[] hits)
+    {
+        foreach(var hit in hits)
+        {
+            // pickups have higher priority
+            if (hit.transform.gameObject.tag == "Pickup")
+            {
+                player.TakePickup(hit.transform.GetComponent<Pickup>());
+                return;
+            }
+        }
+
+        if(hits.Length > 0)
+            player.SetDestination(hits[0].point);
+    }
 
 	private void HandleHoverOn(RaycastHit[] hits)
 	{

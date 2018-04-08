@@ -6,5 +6,5 @@ public class UIController : MonoBehaviour
 {
     public ShopWindow ShopWindow;
     public InventoryWindow InventoryWindow;
-    
+    public WorldSpaceUI WorldUI;
 }

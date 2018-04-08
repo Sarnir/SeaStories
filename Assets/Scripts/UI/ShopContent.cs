@@ -49,7 +49,7 @@ public class ShopContent : MonoBehaviour
             if (inventory.ContainsItem(itemWithPrice.Key))
             {
                 var item = CreateShopItem(itemWithPrice.Key, inventory.GetQuantity(itemWithPrice.Key), itemWithPrice.Value, transform);
-                item.SetTradeable(buyerInventory.Gold >= itemWithPrice.Value);
+                item.SetTradeable(buyerInventory.GetGold() >= itemWithPrice.Value);
             }
         }
     }

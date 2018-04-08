@@ -20,7 +20,7 @@ public class City : MonoBehaviour
 
         var city = cityObject.AddComponent<City>();
 		city.inventory = new Inventory ();
-        city.inventory.Setup();
+        city.inventory.Setup(1000);
 		city.inventory.AddItems(ItemName.Spices, Random.Range(1, 100));
         city.inventory.AddGold(Random.Range(1, 100));
 

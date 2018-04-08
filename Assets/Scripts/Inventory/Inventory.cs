@@ -3,36 +3,38 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class ItemsDictionary : Dictionary<ItemName, uint> { }
+
 public class Inventory
 {
-    public uint Gold
-    {
-        get
-        {
-            return _gold;
-        }
+    uint maxCapacity;
 
-        private set
+    ItemsDictionary itemsDictionary;
+
+    public void Setup(int _maxCapacity)
+    {
+        Setup((uint)_maxCapacity);
+    }
+
+    public void Setup(uint _maxCapacity)
+    {
+        maxCapacity = _maxCapacity;
+
+        if(itemsDictionary == null)
         {
-            _gold = value;
+            itemsDictionary = new ItemsDictionary();
         }
     }
 
-    private uint _gold;
-
-    ItemsCollection inventory;
-
-    public void Setup()
+    public void Setup(int _maxCapacity, ItemsDictionary startingItems)
     {
-        if(inventory == null)
-        {
-            inventory = new ItemsCollection();
-        }
+        Setup((uint)_maxCapacity, startingItems);
     }
 
-	public void Setup(uint startingGold, ItemsDictionary startingItems)
+    public void Setup(uint _maxCapacity, ItemsDictionary startingItems)
     {
-        Gold = startingGold;
+        Setup(_maxCapacity);
 
 		foreach (KeyValuePair<ItemName, uint> item in startingItems)
         {
@@ -40,12 +42,40 @@ public class Inventory
         }
     }
 
-	public uint GetQuantity(ItemName itemName)
+    public ItemsDictionary.Enumerator GetEnumerator()
     {
-        return inventory.GetItemQuantity(itemName);
+        return itemsDictionary.GetEnumerator();
     }
 
-	public void AddItem(ItemName itemName)
+    public uint GetQuantity(ItemName name)
+    {
+        if (itemsDictionary.ContainsKey(name))
+            return itemsDictionary[name];
+        else
+            return 0;
+    }
+
+    public uint GetCurrentCapacity()
+    {
+        uint current = 0;
+
+        foreach(var item in itemsDictionary)
+        {
+            if(item.Key != ItemName.Gold)
+            {
+                current += item.Value;
+            }
+        }
+
+        return current;
+    }
+
+    public uint GetMaxCapacity()
+    {
+        return maxCapacity;
+    }
+
+    public void AddItem(ItemName itemName)
     {
         AddItems(itemName, 1);
     }
@@ -68,19 +98,22 @@ public class Inventory
         AddItems(itemName, (uint)quantity);
     }
 
-	public void AddItems(ItemName itemName, uint quantity)
+    public void AddItems(ItemName name, uint quantity)
     {
         if (quantity == 0)
             return;
 
-        inventory.AddItems(itemName, quantity);
+        if (itemsDictionary.ContainsKey(name))
+            itemsDictionary[name] += quantity;
+        else
+            itemsDictionary.Add(name, quantity);
     }
 
 	public void AddItems(ItemsDictionary items)
 	{
 		foreach (var item in items)
 		{
-			inventory.AddItems (item.Key, item.Value);
+			AddItems (item.Key, item.Value);
 		}
 	}
 
@@ -89,40 +122,53 @@ public class Inventory
         RemoveItems(itemName, 1);
     }
 
-	public void RemoveItems(ItemName itemName, int quantity)
+    public void RemoveItems(ItemName name, int quantity)
+    {
+        if (quantity < 1)
+            return;
+
+        RemoveItems(name, (uint)quantity);
+    }
+
+	public void RemoveItems(ItemName name, uint quantity)
     {
         if (quantity <= 0)
             return;
 
-        inventory.RemoveItem(itemName, quantity);
+        if (itemsDictionary.ContainsKey(name))
+        {
+            var currentQuantity = itemsDictionary[name];
+
+            // we have an exception for gold -
+            // even if its zero don't remove it from the collection
+            if (currentQuantity <= quantity && name != ItemName.Gold)
+                itemsDictionary.Remove(name);
+            else
+                itemsDictionary[name] -= quantity;
+        }
     }
 
     public int GetGold()
     {
-        return (int)Gold;
-    }
-
-    public void SetGold(int quantity)
-    {
-        Gold = (uint)quantity;
+        return (int)GetQuantity(ItemName.Gold);
     }
 
     public void AddGold(int quantity)
     {
-        Gold += (uint)quantity;
+        AddItems(ItemName.Gold, quantity);
     }
 
     public void RemoveGold(int quantity)
     {
-        Gold -= (uint)quantity;
+        RemoveItems(ItemName.Gold, quantity);
     }
 
 	public bool ContainsItem(ItemName itemName)
     {
-        if (!inventory.ContainsItem(itemName))
+        if (itemsDictionary.ContainsKey(itemName))
+            return itemsDictionary[itemName] > 0;
+        else
             return false;
-
-        return inventory.GetItemQuantity(itemName) > 0;
     }
 
     public bool SellItem(ShopItem item, Inventory buyersInventory)
@@ -138,8 +184,30 @@ public class Inventory
         return true;
     }
 
-    public ItemsCollection GetAllItems()
+    public void TransferTo(Inventory taker)
     {
-        return inventory;
+        foreach(var item in itemsDictionary)
+        {
+            taker.AddItems(item.Key, item.Value);
+        }
+
+        itemsDictionary.Clear();
+    }
+
+    public ItemsDictionary GetAllItems()
+    {
+        return itemsDictionary;
+    }
+
+    public string Print()
+    {
+        string inventoryString = "";
+        foreach (var item in itemsDictionary)
+        {
+            inventoryString += item.Value + " " + item.Key + "\n";
+            Debug.Log(item.Value + " " + item.Key);
+        }
+
+        return inventoryString;
     }
 }

@@ -46,6 +46,10 @@ public class InventoryContent : MonoBehaviour
 
 	void CreateInventoryItem(ItemName itemName, uint quantity, Transform parent)
     {
+        // we don't want to display gold as item in slot
+        if (itemName == ItemName.Gold)
+            return;
+
         InventoryItem item = inventoryItemsPool.GetElementFromPool();
 
         item.SetItem(ItemDatabase.GetItemDefinition(itemName), (int)quantity);

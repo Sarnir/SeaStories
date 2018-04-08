@@ -70,12 +70,12 @@ public class ShopWindow : UIWindow
 
     void SetPlayerGold()
     {
-        PlayerGoldText.text = "Player geld: " + playerInventory.Gold;
+        PlayerGoldText.text = "Player geld: " + playerInventory.GetGold();
     }
 
     void SetCityGold()
     {
-        CityGoldText.text = "City geld: " + shopInventory.Gold;
+        CityGoldText.text = "City geld: " + shopInventory.GetGold();
     }
 
     public void SetItemsToBuy(ItemsCollection itemsToBuy)

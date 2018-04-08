@@ -43,7 +43,7 @@ public class PlayerController : ShipController
 			dict.Add (StartingItems [i].name, StartingItems [i].quantity);
 		}
 
-		SetupInventory (dict);
+		SetupInventory (1000, dict);
     }
 
     void Update()
@@ -70,12 +70,12 @@ public class PlayerController : ShipController
             // dodaj zawartość do ekwipunku
             // wyświetl info o tym co wpada
             // kasuj skrzynkę
-            Debug.Log("Pickup picked up xd");
-            Destroy(pickup.gameObject);
+            pickup.OnPickup(inventory);
         }
         else
         {
-            SetDestination(pickup.transform.position); //sail to iiiit
+            Vector3 destination = new Vector3(pickup.GetCenterPos().x, 0f, pickup.GetCenterPos().z);
+            SetDestination(destination); //sail to iiiit
         }
     }
 

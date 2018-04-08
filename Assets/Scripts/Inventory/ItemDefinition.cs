@@ -22,4 +22,5 @@ public enum ItemName
 	Spices,
 	Fish,
 	Tobacco,
+    ItemName_Max,
 }

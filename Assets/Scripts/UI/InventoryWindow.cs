@@ -7,6 +7,7 @@ public class InventoryWindow : UIWindow
 {
     public InventoryContent Content;
     public Text PlayerGoldText;
+    public Text CapacityText;
 
     Inventory playerInventory;
     
@@ -35,10 +36,17 @@ public class InventoryWindow : UIWindow
         Content.GenerateItemList(playerInventory);
 
         SetPlayerGold();
+        SetCapacityText();
     }
 
     void SetPlayerGold()
     {
-        PlayerGoldText.text = "Player geld: " + playerInventory.Gold;
+        PlayerGoldText.text = "Player geld: " + playerInventory.GetGold();
+    }
+
+    void SetCapacityText()
+    {
+        CapacityText.text = "Capacity: " + playerInventory.GetCurrentCapacity() +
+            " / " + playerInventory.GetMaxCapacity();
     }
 }
