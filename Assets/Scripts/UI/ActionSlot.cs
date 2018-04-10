@@ -11,7 +11,7 @@ public class ActionSlot : MonoBehaviour
 
     ShipController playerShip;
 
-    public Action action; // current action
+    public Skill skill; // skill assigned to slot
 
     float coolDown;
 
@@ -20,54 +20,54 @@ public class ActionSlot : MonoBehaviour
         button = GetComponent<Button>();
         playerShip = GameController.Instance.Player;
 
-        if (action != null)
-            SetNewAction(action);
+        if (skill != null)
+            SetNewAction(skill);
     }
 
     private void Update()
     {
-        if (action == null)
+        if (skill == null)
             return;
 
         if(coolDown > 0f)
         {
             coolDown -= Time.deltaTime;
 
-            CooldownFill.fillAmount = coolDown / action.baseCooldown;
+            CooldownFill.fillAmount = coolDown / skill.baseCooldown;
 
             if (coolDown <= 0f)
                 ActionReady();
         }
     }
 
-    void SetNewAction(Action newAction)
+    void SetNewAction(Skill newSkill)
     {
-        action = newAction;
-        ActionIcon.sprite = action.icon;
+        skill = newSkill;
+        ActionIcon.sprite = skill.icon;
         ResetAction();
     }
 
     void ResetAction()
     {
-        if(action != null)
+        if(skill != null)
         {
             button.interactable = false;
-            coolDown = action.baseCooldown;
+            coolDown = skill.baseCooldown;
             CooldownFill.fillAmount = 1f;
         }
     }
 
     void ClearSlot()
     {
-        action = null;
+        skill = null;
         ActionIcon.sprite = null;
     }
 
     public void ActivateCurrentAction()
     {
-        if (action != null)
+        if (skill != null)
         {
-            action.Activate(playerShip);
+            skill.Activate(playerShip);
             ResetAction();
         }
     }

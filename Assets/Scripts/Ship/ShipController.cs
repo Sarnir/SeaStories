@@ -16,15 +16,10 @@ public class ShipController : MonoBehaviour
 	protected Vector3 destination;
 	protected Rigidbody rigidBody;
 
-    // trzymać jakąś listę modifierów?
-    private List<Action> activeEffects;
-
     public float speedModifier;
 
     void Awake()
     {
-        activeEffects = new List<Action>();
-
         sails = GetComponentInChildren<Sails> ();
 		rudder = GetComponentInChildren<Rudder> ();
         physics = GetComponentInChildren<BoatPhysics>();
@@ -41,12 +36,6 @@ public class ShipController : MonoBehaviour
 		ApplyRudderForces ();
 		Sail ();
 	}
-
-    public void AddActiveEffect(Action effect)
-    {
-        // czy można dodawać dwa razy ten sam efekt?
-        activeEffects.Add(effect);
-    }
 
     public ShipWeapons GetWeapons()
     {

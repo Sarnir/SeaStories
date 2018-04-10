@@ -1,7 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-public class FireCannonAction : Action
+public class FireCannonSkill : Skill
 {
     public float baseDmg;
 
@@ -12,15 +12,15 @@ public class FireCannonAction : Action
         actor.GetWeapons().FireCannons();
     }
 
-    [MenuItem("Assets/Create/Actions/FireCannonAction")]
+    [MenuItem("Assets/Create/Skills/FireCannonSkill")]
     public static void CreateAsset()
     {
-        FireCannonAction action = ScriptableObject.CreateInstance<FireCannonAction>();
+        FireCannonSkill skill = ScriptableObject.CreateInstance<FireCannonSkill>();
 
-        AssetDatabase.CreateAsset(action, "Assets/ScriptableObjects/Actions/newFireCannonAction.asset");
+        AssetDatabase.CreateAsset(skill, "Assets/ScriptableObjects/Skills/newFireCannonSkill.asset");
         AssetDatabase.SaveAssets();
 
         EditorUtility.FocusProjectWindow();
-        Selection.activeObject = action;
+        Selection.activeObject = skill;
     }
 }
