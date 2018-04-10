@@ -15,6 +15,10 @@ public class InputController : MonoBehaviour
 
 	public float ScrollFactor = 2f;
 	public float PanSensitivity = 0.05f;
+    public float LMBDownTimeRequiredForFollow = 0.5f;
+
+    float leftClickDownTime;
+
 	bool isCameraPanning;
 	Camera mainCamera;
 
@@ -28,7 +32,9 @@ public class InputController : MonoBehaviour
 		UIController = GameController.Instance.UIController;
 		mainCamera = Camera.main;
 		isCameraPanning = false;
-	}
+        leftClickDownTime = 0f;
+
+    }
 
 	// Update is called once per frame
 	void Update ()
@@ -52,62 +58,13 @@ public class InputController : MonoBehaviour
 			100);
 
 		HandleHoverOn (hits);
-
-		if (Input.GetMouseButtonDown(0))
-		{
-			mouseOrigin = Input.mousePosition;
-			isLeftClickCanceled = false;
-		}
-
-		if(Input.GetMouseButton(0))
-		{
-			var mouseDeltaPos = (mouseOrigin - Input.mousePosition);
-
-			if (mouseDeltaPos.magnitude > 7f)
-				isLeftClickCanceled = true;
-		}
-
-		if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
-		{
-			if(!isLeftClickCanceled)
-			{
-                HandleLeftClick(hits);
-			}
-		}
-
-		if (Input.GetMouseButtonDown(1))
-		{
-			mouseOrigin = Input.mousePosition;
-			isRMBDown = true;
-		}
-
-		if(Input.GetMouseButton(1))
-		{
-			var mouseDeltaPos = (mouseOrigin - Input.mousePosition);
-
-			if (!isCameraPanning)
-			{
-				if (mouseDeltaPos.magnitude > 7f)
-					isCameraPanning = true;
-			}
-
-			if (isCameraPanning)
-			{
-				mainCamera.transform.Translate(new Vector3(mouseDeltaPos.x, 0f, mouseDeltaPos.y) * PanSensitivity, Space.World);
-				mouseOrigin = Input.mousePosition;
-			}
-		}
-
-		if (Input.GetMouseButtonUp(1) && !EventSystem.current.IsPointerOverGameObject())
-		{
-			isCameraPanning = false;
-			isRMBDown = false;
-		}
+        HandleLeftClick(hits);
+        HandleRightClick();
 
 		HandleScrollWheel(Input.GetAxis("Mouse ScrollWheel"));
 	}
 
-    private void HandleLeftClick(RaycastHit[] hits)
+    private void OnLeftClick(RaycastHit[] hits)
     {
         foreach(var hit in hits)
         {
@@ -123,7 +80,73 @@ public class InputController : MonoBehaviour
             player.SetDestination(hits[0].point);
     }
 
-	private void HandleHoverOn(RaycastHit[] hits)
+    private void HandleLeftClick(RaycastHit[] hits)
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            mouseOrigin = Input.mousePosition;
+            isLeftClickCanceled = false;
+        }
+
+        if (Input.GetMouseButton(0))
+        {
+            var mouseDeltaPos = (mouseOrigin - Input.mousePosition);
+
+            leftClickDownTime += Time.deltaTime;
+
+            if (mouseDeltaPos.magnitude > 7f)
+                isLeftClickCanceled = true;
+
+            if (leftClickDownTime > LMBDownTimeRequiredForFollow)
+            {
+                if (hits.Length > 0)
+                    player.SetDestination(hits[0].point);
+            }
+        }
+
+        if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
+        {
+            leftClickDownTime = 0f;
+            if (!isLeftClickCanceled)
+            {
+                OnLeftClick(hits);
+            }
+        }
+    }
+
+    private void HandleRightClick()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            mouseOrigin = Input.mousePosition;
+            isRMBDown = true;
+        }
+
+        if (Input.GetMouseButton(1))
+        {
+            var mouseDeltaPos = (mouseOrigin - Input.mousePosition);
+
+            if (!isCameraPanning)
+            {
+                if (mouseDeltaPos.magnitude > 7f)
+                    isCameraPanning = true;
+            }
+
+            if (isCameraPanning)
+            {
+                mainCamera.transform.Translate(new Vector3(mouseDeltaPos.x, 0f, mouseDeltaPos.y) * PanSensitivity, Space.World);
+                mouseOrigin = Input.mousePosition;
+            }
+        }
+
+        if (Input.GetMouseButtonUp(1) && !EventSystem.current.IsPointerOverGameObject())
+        {
+            isCameraPanning = false;
+            isRMBDown = false;
+        }
+    }
+
+    private void HandleHoverOn(RaycastHit[] hits)
 	{
 		bool wasPickupHit = false;
 		foreach (var hit in hits)

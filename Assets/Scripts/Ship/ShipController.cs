@@ -50,7 +50,7 @@ public class ShipController : MonoBehaviour
 
 	protected void Sail ()
 	{
-        if (Vector3.Distance(destination, transform.position) > 1f)
+        if (Vector3.Distance(destination, transform.position) > 1.5f)
         {
             var angle = Utils.Math.AngleSigned(transform.up, transform.position - destination);
 
