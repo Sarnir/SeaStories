@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
+[CreateAssetMenu(fileName = "Assets/ScriptableObjects/Skills/SpeedUpSkill", menuName = "Skills/SpeedUpSkill")]
 public class SpeedUpSkill : Skill
 {
     public float modifier;
@@ -14,17 +15,5 @@ public class SpeedUpSkill : Skill
 
         actor.speedModifier = modifier;
         skillDuration.Start(() => { actor.speedModifier = 1f; });
-    }
-
-    [MenuItem("Assets/Create/Skills/SpeedUpSkill")]
-    public static void CreateAsset()
-    {
-        SpeedUpSkill action = ScriptableObject.CreateInstance<SpeedUpSkill>();
-
-        AssetDatabase.CreateAsset(action, "Assets/ScriptableObjects/Skills/newSpeedUpSkill.asset");
-        AssetDatabase.SaveAssets();
-
-        EditorUtility.FocusProjectWindow();
-        Selection.activeObject = action;
     }
 }

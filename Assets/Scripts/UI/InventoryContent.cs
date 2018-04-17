@@ -8,6 +8,7 @@ public class InventoryContent : MonoBehaviour
 {
     ObjectPool<InventoryItem> inventoryItemsPool;
 
+    public ItemInfoView ItemInfoView;
     public InventoryItem ItemPrefab;
     
     Inventory inventory;
@@ -52,6 +53,9 @@ public class InventoryContent : MonoBehaviour
 
         InventoryItem item = inventoryItemsPool.GetElementFromPool();
 
-        item.SetItem(ItemDatabase.GetItemDefinition(itemName), (int)quantity);
+        var itemDefinition = ItemDatabase.GetItemDefinition(itemName);
+
+        item.SetItem(itemDefinition, (int)quantity);
+        item.button.onClick.AddListener(() => ItemInfoView.SetItemInfo(itemDefinition));
     }
 }
