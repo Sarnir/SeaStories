@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class InventoryWindow : UIWindow
+public class InventoryView : MonoBehaviour
 {
     public InventoryContent Content;
     public Text PlayerGoldText;
@@ -13,26 +13,15 @@ public class InventoryWindow : UIWindow
     
     ScrollRect scrollView;
 
-	protected override void Setup ()
+	protected void Setup ()
     {
         scrollView = GetComponentInChildren<ScrollRect>();
 	}
 
-    public void ToggleInventory(Inventory _inventory)
+    public void RefreshInventory(Inventory _inventory)
     {
         playerInventory = _inventory;
-        if (IsOpened())
-        {
-            Close();
-        }
-        else
-        {
-            Open();
-        }
-    }
 
-    protected override void OnOpened()
-    {
         Content.GenerateItemList(playerInventory);
 
         SetPlayerGold();

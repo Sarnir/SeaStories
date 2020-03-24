@@ -222,6 +222,9 @@ public class BoatPhysics : MonoBehaviour
 
     void ApplyRudderForces()
     {
+        if (rudder == null)
+            return;
+
         var vel = rigidBody.velocity;
         vel.y = 0f;
         var velocityParam = Mathf.Clamp01(vel.magnitude);
@@ -304,22 +307,23 @@ public class BoatPhysics : MonoBehaviour
             if (Vector3.Dot(forwardForce.normalized, transform.up.normalized) < 0)
                 forwardForce = Vector3.zero;
             
-            Debug.DrawRay(transform.position, apparentWindForce * 5f, Color.yellow);
-            Debug.DrawRay(transform.position, drag * 5f, Color.red);
-            Debug.DrawRay(transform.position, lift * 5f, Color.green);
-            Debug.DrawRay(transform.position, lateralForce * 5f, Color.blue);
-            Debug.DrawRay(transform.position, forwardForce * 5f, Color.black);
+            //Debug.DrawRay(transform.position, apparentWindForce * 5f, Color.yellow);
+            //Debug.DrawRay(transform.position, drag * 5f, Color.red);
+            //Debug.DrawRay(transform.position, lift * 5f, Color.green);
+            //Debug.DrawRay(transform.position, lateralForce * 5f, Color.blue);
+            //Debug.DrawRay(transform.position, forwardForce * 5f, Color.black);
             rigidBody.AddForceAtPosition(forwardForce, submergedCenter);
             rigidBody.AddForceAtPosition(lateralForce, new Vector3(submergedCenter.x, sails.GetCenter().y, submergedCenter.z));
             rigidBody.AddForceAtPosition(-lateralForce, submergedCenter);
         }
-        Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
+        //Debug.DrawRay(transform.position, sails.GetTrueWind() * 5f, Color.cyan);
     }
 
 	string myLog;
 
 	void OnGUI ()
 	{
+        return;
         if (!string.IsNullOrEmpty(myLog))
         {
             var style = new GUIStyle();
@@ -445,7 +449,7 @@ public class BoatPhysics : MonoBehaviour
         // draw water level
         for (int i = 0; i < intersectionPoints.Count; i += 2)
         {
-            Debug.DrawLine(intersectionPoints[i], intersectionPoints[i + 1], Color.red);
+            //Debug.DrawLine(intersectionPoints[i], intersectionPoints[i + 1], Color.red);
         }
     }
 

@@ -33,6 +33,8 @@ public class ShopWindow : UIWindow
 
     public void OpenShop(Inventory _playerInventory, City shop)
     {
+        Open();
+
         playerInventory = _playerInventory;
         shopInventory = shop.GetInventory();
 
@@ -42,7 +44,6 @@ public class ShopWindow : UIWindow
         SetPlayerGold();
         SetCityGold();
 
-        Open();
         SwitchToBuyContent(true);
     }
 
@@ -78,12 +79,12 @@ public class ShopWindow : UIWindow
         CityGoldText.text = "City geld: " + shopInventory.GetGold();
     }
 
-    public void SetItemsToBuy(ItemsCollection itemsToBuy)
+    public void SetItemsToBuy(ItemsDictionary itemsToBuy)
     {
         BuyContent.GenerateItemList(shopInventory, playerInventory, itemsToBuy);
     }
 
-    void SetItemsToSell(ItemsCollection sellableItemsWithPrices)
+    void SetItemsToSell(ItemsDictionary sellableItemsWithPrices)
     {
         SellContent.GenerateItemList(playerInventory, shopInventory, sellableItemsWithPrices);
     }

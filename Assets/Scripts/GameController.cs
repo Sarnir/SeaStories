@@ -45,9 +45,14 @@ public class GameController : MonoBehaviour {
         Player.LeaveCity();
     }
 
-    public void ToggleInventory()
+    public void ToggleMenu()
     {
-		UIController.InventoryWindow.ToggleInventory(Player.GetInventory());
+        UIController.MenuWindow.ToggleMenu(Player.GetInventory());
+        TogglePauseWorld();
+    }
+
+    public void TogglePauseWorld()
+    {
         Player.IsConsumingFood = !Player.IsConsumingFood;
     }
 }

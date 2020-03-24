@@ -5,6 +5,6 @@ using UnityEngine;
 public class UIController : MonoBehaviour
 {
     public ShopWindow ShopWindow;
-    public InventoryWindow InventoryWindow;
+    public MenuWindow MenuWindow;
     public WorldSpaceUI WorldUI;
 }

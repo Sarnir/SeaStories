@@ -4,19 +4,12 @@ using UnityEngine;
 
 public class UIWindow : MonoBehaviour
 {
-    Canvas canvas;
-    // Use this for initialization
-    protected void Start () {
-        canvas = GetComponent<Canvas>();
 
+    protected void Start ()
+    {
         Setup();
     }
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
     protected virtual void Setup()
     {
 
@@ -24,17 +17,17 @@ public class UIWindow : MonoBehaviour
 
     public bool IsOpened()
     {
-        return canvas.enabled;
+        return gameObject.activeInHierarchy;
     }
 
     public virtual void Close()
     {
-        canvas.enabled = false;
+        gameObject.SetActive(false);
     }
 
     public virtual void Open()
     {
-        canvas.enabled = true;
+        gameObject.SetActive(true);
         OnOpened();
     }
 

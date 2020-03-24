@@ -14,9 +14,9 @@ public class ShopContent : MonoBehaviour
 
     Inventory inventory;
     Inventory buyerInventory;
-    ItemsCollection itemsWithPricesFilter;
+    ItemsDictionary itemsWithPricesFilter;
 
-    void Start()
+    void Awake()
     {
         shopItemsPool = new ObjectPool<ShopItem>(ShopItemPrefab, transform);
     }
@@ -31,7 +31,7 @@ public class ShopContent : MonoBehaviour
         gameObject.SetActive(val);
     }
 
-    public void GenerateItemList(Inventory _inventory, Inventory _buyersInventory, ItemsCollection tradeItemsWithPrices)
+    public void GenerateItemList(Inventory _inventory, Inventory _buyersInventory, ItemsDictionary tradeItemsWithPrices)
     {
         inventory = _inventory;
         buyerInventory = _buyersInventory;

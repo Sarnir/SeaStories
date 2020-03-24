@@ -40,4 +40,17 @@ public class ObjectPool<T> where T : MonoBehaviour
             pool[i].gameObject.SetActive(false);
         }
     }
+
+    public List<T> GetAllActiveElements()
+    {
+        List<T> elements = new List<T>();
+
+        for (int i = 0; i < pool.Count; i++)
+        {
+            if (pool[i].gameObject.activeSelf)
+                elements.Add(pool[i]);
+        }
+
+        return elements;
+    }
 }

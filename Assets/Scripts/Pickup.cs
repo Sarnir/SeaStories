@@ -35,13 +35,23 @@ public class Pickup : MonoBehaviour {
 	
 	public void OnPickup(Inventory taker)
     {
-        Debug.Log("Picked up: ");
-        var inventoryString = inventory.Print();
-        inventory.TransferTo(taker);
+        if (inventory.GetCurrentCapacity() + taker.GetCurrentCapacity() > taker.GetMaxCapacity())
+        {
+            string noSpaceText = "Can't pick up, no space left in inventory!";
+            Debug.Log(noSpaceText);
 
-        gameController.UIController.WorldUI.SpawnText(GetCenterPos(), inventoryString);
+            gameController.UIController.WorldUI.SpawnText(GetCenterPos(), noSpaceText);
+        }
+        else
+        {
+            Debug.Log("Picked up: ");
+            var inventoryString = inventory.Print();
+            inventory.TransferTo(taker);
 
-        Destroy(gameObject);
+            gameController.UIController.WorldUI.SpawnText(GetCenterPos(), inventoryString);
+
+            Destroy(gameObject);
+        }
     }
 
     public void OnCursorEnter()

@@ -24,8 +24,12 @@ public class InputController : MonoBehaviour
 
 	Pickup activePickup;
 
+    MovingObject playerTest;
+
 	void Start ()
 	{
+        playerTest = FindObjectOfType<MovingObject>();
+
 		activePickup = null;
 
 		player = GameController.Instance.Player;
@@ -66,7 +70,7 @@ public class InputController : MonoBehaviour
 
     private void OnLeftClick(RaycastHit[] hits)
     {
-        foreach(var hit in hits)
+        /*foreach(var hit in hits)
         {
             // pickups have higher priority
             if (hit.transform.gameObject.tag == "Pickup")
@@ -77,7 +81,9 @@ public class InputController : MonoBehaviour
         }
 
         if(hits.Length > 0)
-            player.SetDestination(hits[0].point);
+            player.SetDestination(hits[0].point);*/
+
+        playerTest.Seek(hits[0].point);
     }
 
     private void HandleLeftClick(RaycastHit[] hits)

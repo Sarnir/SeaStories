@@ -5,8 +5,8 @@ using UnityEngine;
 public class City : MonoBehaviour
 {
     Inventory inventory;
-    ItemsCollection itemsToBuy;
-    ItemsCollection itemsToSell;
+    ItemsDictionary itemsToBuy;
+    ItemsDictionary itemsToSell;
 
     public static City Create(string name, Transform parent, Vector3 position)
     {
@@ -24,11 +24,11 @@ public class City : MonoBehaviour
 		city.inventory.AddItems(ItemName.Spices, Random.Range(1, 100));
         city.inventory.AddGold(Random.Range(1, 100));
 
-        city.itemsToBuy = new ItemsCollection();
-		city.itemsToBuy.AddItems(ItemName.Tobacco, Random.Range(1, 10));
+        city.itemsToBuy = new ItemsDictionary();
+		city.itemsToBuy.Add(ItemName.Tobacco, (uint)Random.Range(1, 10));
 
-        city.itemsToSell = new ItemsCollection();
-		city.itemsToSell.AddItems(ItemName.Spices, Random.Range(1, 10));
+        city.itemsToSell = new ItemsDictionary();
+		city.itemsToSell.Add(ItemName.Spices, (uint)Random.Range(1, 10));
 
         return city;
     }
@@ -52,12 +52,12 @@ public class City : MonoBehaviour
         }
     }
 
-    public ItemsCollection GetItemsForSale()
+    public ItemsDictionary GetItemsForSale()
     {
         return itemsToSell;
     }
 
-    public ItemsCollection GetItemsToBuy()
+    public ItemsDictionary GetItemsToBuy()
     {
         return itemsToBuy;
     }
